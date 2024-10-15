@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{bm}
+
+\begin{document}
+
+\title{Mathematical Description of CDPCA}
+\author{}
+\date{}
+\maketitle
+
+\section*{Overview}
+
+The Clustering and Disjoint Principal Components Analysis (CDPCA) aims to simultaneously cluster rows and columns of a data matrix and extract principal components from the clustered data. Given a data matrix $\bm{X} \in \mathbb{R}^{I \times J}$, the goal is to partition it into $P$ clusters of rows (objects) and $Q$ clusters of columns (variables) while extracting $Q$ disjoint principal components.
+
+\section*{Mathematical Steps}
+
+\subsection*{Step 1: Data Normalization}
+First, normalize the data matrix $\bm{X}$:
+\[
+\bm{X}_s = \frac{\bm{X} - \bm{\mu}_X}{\bm{\sigma}_X} \cdot \sqrt{\frac{I}{I-1}}
+\]
+where $\bm{\mu}_X$ and $\bm{\sigma}_X$ are the mean and standard deviation of the columns of $\bm{X}$.
+
+\subsection*{Step 2: Initialize Matrices}
+Initialize random binary and row-stochastic matrices:
+\[
+\bm{U} \in \{0,1\}^{I \times P}, \quad \bm{V} \in \{0,1\}^{J \times Q}
+\]
+Each row of $\bm{U}$ and $\bm{V}$ contains exactly one non-zero entry.
+
+\subsection*{Step 3: Iterative Optimization}
+Iteratively update matrices $\bm{U}$, $\bm{V}$, and $\bm{A}$ (the component loading matrix).
+
+\subsubsection*{Update $\bm{A}$}
+
+For each cluster $j$ in $\bm{V}$, find the dominant eigenvector using the power method:
+
+1. Compute the within-cluster scatter matrix:
+   \[
+   \bm{S}_{\text{group}} = \bm{X}_{\text{group}, J_{xx}}^\top \bm{X}_{\text{group}, J_{xx}}
+   \]
+
+2. Compute or update the loading vectors:
+   \[
+   \bm{A}_{J_{xx}, j} = \text{dominant eigenvector of } \bm{S}_{\text{group}}
+   \]
+
+\subsubsection*{Update $\bm{U}$ and $\bm{V}$}
+
+Find new partitions by minimizing Euclidean distances:
+
+- Update $\bm{U}$: Assign each object to the nearest centroid in the reduced space.
+
+- Update $\bm{V}$: For each variable, determine the cluster by evaluating the increase in objective function $\mathcal{F}$:
+  \[
+  \mathcal{F} = \text{trace}\left((\bm{U} \bm{Y}_\text{bar})^\top (\bm{U} \bm{Y}_\text{bar})\right)
+  \]
+
+\subsection*{Step 4: Converged Solution}
+Upon convergence determined by $\text{tolerance} = \epsilon$:
+- Normalize and reorder $\bm{A}$ according to the explained variances of the columns of $\bm{X}_s \bm{A}$.
+
+\subsection*{Output}
+
+The algorithm outputs the sorted loading matrix $\bm{A}_{\text{order}}$, where columns are ordered by the variance they explain in the reduced space.
+
+\end{document}
