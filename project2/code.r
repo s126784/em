@@ -1,3 +1,9 @@
+options(rgl.useNULL=TRUE)
+if(!require('matlib')) {
+  install.packages('matlib')
+  library('matlib')
+}
+
 # ============= STEP 1: LOAD LIBRARIES =============
 library(quantmod)
 library(tidyverse)
@@ -5,6 +11,10 @@ library(stats)
 library(cluster)
 library(corrplot)
 library(ggplot2)
+library(corrplot)
+library(Amelia)
+library(ggplot2)
+library(mi)
 
 # ============= STEP 2: DEFINE STOCK SYMBOLS =============
 tech_stocks <- c("AAPL", "MSFT", "GOOGL")
@@ -54,6 +64,8 @@ names(stock_data_list) <- all_stocks
 
 # ============= STEP 4: DATA PROCESSING =============
 # Remove failed downloads
+stock_data_list <- lapply(all_stocks, get_stock_data)
+names(stock_data_list) <- all_stocks
 stock_data_list <- stock_data_list[!sapply(stock_data_list, is.null)]
 cat("\n\nProcessed Data:")
 cat("\nNumber of successfully downloaded stocks:", length(stock_data_list))
@@ -65,6 +77,7 @@ cat("\nInitial combined data dimensions:", dim(combined_data)[1], "rows x", dim(
 # Clean missing values
 combined_data <- na.omit(combined_data)
 cat("\nAfter cleaning missing values:", dim(combined_data)[1], "rows x", dim(combined_data)[2], "columns")
+
 
 # ============= STEP 5: PREPARE ANALYSIS MATRIX =============
 # Select numeric variables for analysis
@@ -85,6 +98,12 @@ cat("\nNumber of observations (n):", n)
 cat("\nNumber of variables (p):", p)
 # cat("\nCase type:", ifelse(p < n, "p < n (more observations than variables)", "p > n (more variables than observations)"))
 # cat("\np/n ratio:", round(p/n, 4))
+
+
+missing_count <- floor(n * p * 0.10)
+missing_indices <- sample(1:(n*p), missing_count)
+X_missing <- X_scaled
+X_missing[missing_indices] <- NA
 
 # ============= STEP 6: CORRELATION ANALYSIS =============
 cat("\n\nCalculating Correlations...")
@@ -117,45 +136,69 @@ time_series_plot <- ggplot(plot_data, aes(x = Date, y = Value, color = Symbol)) 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 print(time_series_plot)
 
-# ============= STEP 9: SAVE RESULTS =============
-results <- list(
-  data = X_scaled,
-  symbols = all_stocks,
-  dates = combined_data$Date,
-  dimensions = list(
-    n = n,
-    p = p,
-    p_n_ratio = p/n
-  )
+# ============= STEP 9: DIFFERENT IMPUTATION METHODS =============
+# 9.1. Mean Imputation
+X_mean <- X_missing
+for(j in 1:ncol(X_mean)) {
+  X_mean[is.na(X_mean[,j]), j] <- mean(X_mean[,j], na.rm = TRUE)
+}
+
+# 9.2. Median Imputation
+X_median <- X_missing
+for(j in 1:ncol(X_median)) {
+  X_median[is.na(X_median[,j]), j] <- median(X_median[,j], na.rm = TRUE)
+}
+
+# 9.3. KNN Imputation
+X_knn <- as.matrix(VIM::kNN(X_missing)[,1:ncol(X_missing)])
+
+# 9.4. EM Algorithm
+X_em_expectation_maximization <- amelia(X_missing, m=1)$imputations[[1]]
+
+# 9.5. Data filtering
+X_filtered <- na.omit(X_missing)
+print(dim(X_filtered))
+
+# ============= STEP 10: APPLY CDPCA TO ALL VERSIONS =============
+set.seed(123155 + 123177 + 126784)
+P <- 3  # Number of clusters
+Q <- 2  # Number of components
+
+cdpc_results <- list(
+  original = CDpca(X_scaled, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
+  mean = CDpca(X_mean, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
+  median = CDpca(X_median, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
+  knn = CDpca(X_knn, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
+  em_expectation_maximization = CDpca(X_em_expectation_maximization, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
+  filtered = CDpca(X_filtered, P=P, Q=Q, tol=1e-5, maxit=100, r=10)
 )
-saveRDS(results, "processed_financial_data.rds")
 
-# Print final summary
-cat("\n\nFinal Summary:")
-cat("\nTotal observations (n):", n)
-cat("\nTotal variables (p):", p)
-cat("\nStocks analyzed:", length(unique(combined_data$Symbol)))
-cat("\nDate range:", min(combined_data$Date), "to", max(combined_data$Date))
+# ============= STEP 11: COMPARE RESULTS =============
+metrics <- data.frame(
+  Method = c("Original", "Mean", "Median", "KNN", "EMax", "Filtered"),
+  bcdev = sapply(cdpc_results, function(x) x$bcdev),
+  Enorm = sapply(cdpc_results, function(x) x$Enorm)
+)
 
-# ============= STEP 10: APPLY CDPCA =============
-# Choosing parameters for CDPCA
-P <- 3  # Number of clusters for stocks
-Q <- 2  # Number of clusters for variables
+# ============= STEP 12: VISUALIZE RESULTS =============
+# Function to get y-axis range with small margins
+get_range <- function(x) {
+  margin <- (max(x) - min(x)) * 0.1
+  c(min(x) - margin, max(x) + margin)
+}
 
-# Call the CDpca function
-cdpc_result <- CDpca_simple(data = X_scaled, class = NULL, P = P, Q = Q,
-                            tol = 1e-5, maxit = 100, r = 10, cdpcaplot = TRUE)
+# Cluster Deviance Plot with tight y-axis
+ggplot(metrics, aes(x=Method, y=bcdev)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  theme_minimal() +
+  labs(title="Cluster Deviance by Method", y="Cluster Deviance (%)") +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  coord_cartesian(ylim = get_range(metrics$bcdev))
 
-# Review results from CDPCA
-cat("\nCDPCA Analysis Results:\n")
-print(cdpc_result)
-
-# =========== STEP 11: Visualise ======
-Y <- cdpc_result[["Y"]]  # Get component score matrix
-ggplot(as.data.frame(Y), aes(x=V1, y=V2)) +
-  geom_point(aes(color=combined_data$Symbol)) +   # Color by stock symbol
-  labs(title="Stock Data in CDPCA Space",
-       x="Principal Component 1",
-       y="Principal Component 2") +
-  theme_minimal()
-
+# Error Norm Plot with tight y-axis
+ggplot(metrics, aes(x=Method, y=Enorm)) +
+  geom_bar(stat="identity", fill="coral") +
+  theme_minimal() +
+  labs(title="Error Norm by Method", y="Error Norm") +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  coord_cartesian(ylim = get_range(metrics$Enorm))

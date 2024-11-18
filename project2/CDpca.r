@@ -1,15 +1,9 @@
-options(rgl.useNULL=TRUE)
 if(!require('matlib')) {
   install.packages('matlib')
   library('matlib')
 }
 
-
-#############################################
-#             Function CDpca                #
-#############################################
-
-CDpca_simple <- function(data, class = NULL,  P, Q, tol=10^(-5), maxit = 1, r = 1, cdpcaplot= TRUE) {
+CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), maxit, r, cdpcaplot= TRUE) {
   # CDpca performs a clustering and disjoint principal components analysis
   # on the given numeric data matrix and returns a list of results
   #
@@ -17,6 +11,7 @@ CDpca_simple <- function(data, class = NULL,  P, Q, tol=10^(-5), maxit = 1, r = 
   #  data: data frame (numeric).
   #  class: vector (numeric) or 0, if classes of objects are unknown.
   #  fixAtt: vector (numeric) or 0, for a selection of attributes.
+  #  SDPinitial: 1 or 0, for random initialization of U and V
   #  nnloads: 1 or 0, for nonnegative loadings
   #  cdpcaplot: integer: 1 or 0, if no plot is displayed.
   #  Q: integer, number of clusters of variables.
@@ -67,10 +62,58 @@ CDpca_simple <- function(data, class = NULL,  P, Q, tol=10^(-5), maxit = 1, r = 
     U0
   }  # end RandMat function
 
+  ######################################
+  #
+  # SDP initialization
+  #
+  ######################################
+  SDPinitialization <- function(dim1,dim2,D,data){
+    # Generates a binary and row stochastic matrix
+    # using SDP-based approach
+    #
+    # Args:
+    #  dim1: number of rows.
+    #  dim2: number of columns.
+    #
+    # Returns:
+    #  The random matrix (dim1xdim2) with only one nonzero element per row.
+    #
+    # approximate solution for clustering
+    em <- cbind(rep(1,dim1))
+    matIem <- diag(dim1)-(1/dim1)*em%*%t(em)
+    if (dim1 == dim(data)[1]){
+      data <- D
+    }else{
+      data <- t(D)
+    }
+    So <- matIem%*%data%*%t(data)%*%matIem
+    matF <- matrix(svd(So)$v[, 1:(dim2-1)], ncol = dim2-1)
+    matFFT <- matF%*%t(matF)
+    # approximate solution to the SDP-based model for clustering
+    Z.bar <- matFFT + 1/dim1 *em%*%t(em)
+
+    # refine solutions
+    cent <- Z.bar%*%data
+    centunique <- unique(cent)
+    t <- dim(centunique)[1]
+
+    # initial kmeans step
+    indcentroids <- sort(sample(1:t, dim2, replace=FALSE), decreasing=FALSE)
+    centroids <- centunique[indcentroids, ]
+    solkmeans <- kmeans(data, centroids, iter.max = 100000)
+    M <- matrix(0, dim1, dim2)
+    for (i in 1:dim1){
+      M[i, solkmeans$cluster[i]] <- 1
+    }
+    M
+  }
+
+
+
   data.sd <- data.frame(scale(data, center = TRUE, scale = TRUE))
 
-  I <- nrow(data)[1]  					# number of objects I
-  J <- ncol(data)  					# number of variables J
+  I <- dim(data)[1]  					# number of objects I
+  J <- dim(data)[2]  					# number of variables J
   Xs <- as.matrix(data.sd*sqrt(I/(I-1)))  	# matrix of normalized data (with variance divided by I)
   # matriz X (I x J) (obs x vars), numeric matrix argument
   tfbest <- matrix(0, r, 1)  # computational time at each loop
@@ -82,9 +125,14 @@ CDpca_simple <- function(data, class = NULL,  P, Q, tol=10^(-5), maxit = 1, r = 
     # Initialization
     iter <- 0
 
-    U <- RandMat(I, P)
-    V <- RandMat(J, Q)
-
+    # SDP initialization or not?
+    if (SDPinitial){
+      U <- SDPinitialization(I, P, Xs, data)
+      V <- SDPinitialization(J, Q, Xs, data)
+    }else{
+      U <- RandMat(I, P)
+      V <- RandMat(J, Q)
+    }
 
     #Set of the variables
 
@@ -262,6 +310,10 @@ CDpca_simple <- function(data, class = NULL,  P, Q, tol=10^(-5), maxit = 1, r = 
 
   # Table Real vs CDPCA classification
   classcdpca <- Ucdpca%*%as.matrix(1:ncol(Ucdpca))
+  if (!is.null(class)){
+    class <- data.frame(class)
+    maxclass <- max(class)
+  }
 
   # Variability of Ycdpca and in decreasing order
   varYcdpca <- var(Ycdpca)
@@ -280,11 +332,18 @@ CDpca_simple <- function(data, class = NULL,  P, Q, tol=10^(-5), maxit = 1, r = 
   # We can check the model using these column sort matrices and observe that
   # Ucdpca%*%Y.barcdpca%*%t(Acdpca) = Ucdpca%*%Ybarorder%*%t(Aorder)
 
-
-  realclasstrue <- 2
-  pseudocm <- NULL
-  tabrealcdpca <- data.frame(classcdpca)
-  colnames(tabrealcdpca) <- c("CDPCA Class")
+  if ( is.null(class) ) {
+    realclasstrue <- 2
+    pseudocm <- NULL
+    tabrealcdpca <- data.frame(classcdpca)
+    colnames(tabrealcdpca) <- c("CDPCA Class")
+  }else{
+    realclasstrue <- 3
+    tabrealcdpca <- data.frame(class, classcdpca)
+    colnames(tabrealcdpca) <- c("Real Class", "CDPCA Class")
+    # pseudo-confusion matrix
+    pseudocm <- table(tabrealcdpca)
+  }  # end if
 
 
   # PLOTS: CDPCA classification

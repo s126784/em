@@ -42,7 +42,7 @@ Oleksandr Solovei ( 126784 )
         \begin{itemize}
             \item High dimensionality of financial market data
             \item Complex correlations between market sectors
-            \item Need for effective portfolio diversification
+            \item Missing data in financial time series adds another layer of complexity
             \item Challenge in identifying distinct market patterns
         \end{itemize}
     \end{block}
@@ -50,9 +50,9 @@ Oleksandr Solovei ( 126784 )
     \begin{block}{Objectives}
         \begin{itemize}
             \item Apply CDPCA to financial market data
+            \item Introduce a new element by integrating missing data handling into the CDPCA framework.
+            \item Address the challenge of missing data using different techniques
             \item Identify disjoint components in market sectors
-            \item Analyze sector-specific patterns
-            \item Develop improved diversification strategies
         \end{itemize}
     \end{block}
 \end{frame}
@@ -87,25 +87,6 @@ Oleksandr Solovei ( 126784 )
             \item $\hat{\mathbf{Y}}$: Cluster centroids $(P \times Q)$
             \item $\mathbf{A}$: Component loading matrix transposed $(Q \times J)$
             \item $\mathbf{E}$: Error matrix $(I \times J)$
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}{Key Properties}
-    \begin{block}{Structural Features}
-        \begin{itemize}
-            \item Binary cluster membership: $u_{ip} \in \{0,1\}$
-            \item Disjoint components: Each asset loads on one component
-            \item Between-cluster variance maximization
-            \item Non-orthogonal components possible (reflecting market reality)
-        \end{itemize}
-    \end{block}
-
-    \begin{block}{Financial Interpretation}
-        \begin{itemize}
-            \item Components represent distinct market sectors
-            \item Clusters show groups of similarly behaving assets
-            \item Natural basis for sector rotation strategies
         \end{itemize}
     \end{block}
 \end{frame}
@@ -151,32 +132,10 @@ Oleksandr Solovei ( 126784 )
         \draw [arrow] (centroid) -- (component);
         \draw [arrow] (component) -- ++(0,-1.5) -| (cluster);
 
-        % Convergence loop
-        \node [text width=3cm, text centered] at ($(component)+(2,-1)$)
-            {Repeat until convergence};
     \end{tikzpicture}
 \end{frame}
 
-
-\begin{frame}{Applications in Finance}
-    \begin{block}{Portfolio Management}
-        \begin{itemize}
-            \item Sector-based portfolio construction
-            \item Risk decomposition by market segments
-            \item Enhanced diversification strategies
-        \end{itemize}
-    \end{block}
-
-    \begin{block}{Market Analysis}
-        \begin{itemize}
-            \item Identification of market regimes
-            \item Sector rotation opportunities
-            \item Risk factor decomposition
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}{Data Structure and Variables Overview}
+\begin{frame}{Data Overview}
 
     \begin{block}{Data Source and Structure}
         \begin{itemize}
@@ -251,176 +210,45 @@ Oleksandr Solovei ( 126784 )
     \end{columns}
 \end{frame}
 
-
-
 \begin{frame}{Variable Structure}
-    \begin{tikzpicture}
-        \begin{axis}[
-            width=\textwidth,
-            height=0.7\textheight,
-            xlabel=Variables,
-            ylabel=Loading Values,
-            title=CDPCA Variable Loadings,
-            symbolic x coords={Open, High, Low, Close, Volume, Adjusted},
-            xtick=data,
-            xticklabel style={rotate=45, anchor=east},
-            legend pos=north east,
-            ybar,
-            bar width=7pt
-        ]
+   \begin{tikzpicture}
+       \begin{axis}[
+           width=\textwidth,
+           height=0.7\textheight,
+           xlabel=Variables,
+           ylabel=Loading Values,
+           title=CDPCA Variable Loadings,
+           symbolic x coords={Open, High, Low, Close, Volume, Adjusted},
+           xtick=data,
+           xticklabel style={rotate=45, anchor=east},
+           legend pos=north west,
+           ybar,
+           bar width=7pt,
+           ymin=0,
+           ymax=1
+       ]
 
-        \addplot[fill=blue!40] coordinates {
-            (Open,0.8)
-            (High,0.75)
-            (Low,0.7)
-            (Close,0.85)
-            (Volume,0.1)
-            (Adjusted,0.82)
-        };
+       \addplot[fill=blue!40] coordinates {
+           (Open,0.4469)
+           (High,0.4470)
+           (Low,0.4467)
+           (Close,0.4469)
+           (Volume,0.0000)
+           (Adjusted,0.4486)
+       };
 
-        \addplot[fill=red!40] coordinates {
-            (Open,0.2)
-            (High,0.25)
-            (Low,0.3)
-            (Close,0.15)
-            (Volume,0.9)
-            (Adjusted,0.18)
-        };
+       \addplot[fill=red!40] coordinates {
+           (Open,0.0000)
+           (High,0.0000)
+           (Low,0.0000)
+           (Close,0.0000)
+           (Volume,1.0000)
+           (Adjusted,0.0000)
+       };
 
-        \legend{Component 1, Component 2}
-        \end{axis}
-    \end{tikzpicture}
-\end{frame}
-
-\begin{frame}{Sector Clustering Results}
-    \begin{tikzpicture}
-        \begin{axis}[
-            width=\textwidth,
-            height=0.7\textheight,
-            xlabel=First Component,
-            ylabel=Second Component,
-            title=CDPCA Market Sector Clustering,
-            grid=major,
-            legend pos=north east
-        ]
-
-        % Tech Sector
-        \addplot[only marks,mark=*,blue,mark size=2pt] coordinates {
-            (1.5,1.2) (1.3,1.4) (1.4,1.3)
-        };
-
-        % Financial Sector
-        \addplot[only marks,mark=square*,red,mark size=2pt] coordinates {
-            (-1.2,-1.1) (-1.4,-1.3) (-1.3,-1.2)
-        };
-
-        % Consumer Sector
-        \addplot[only marks,mark=triangle*,green,mark size=2pt] coordinates {
-            (0.2,0.3) (0.1,0.2) (0.3,0.1)
-        };
-
-        % Add labels for stocks
-        \node at (axis cs:1.5,1.2) [above right] {\tiny AAPL};
-        \node at (axis cs:1.3,1.4) [above right] {\tiny MSFT};
-        \node at (axis cs:1.4,1.3) [above right] {\tiny GOOGL};
-
-        \node at (axis cs:-1.2,-1.1) [above left] {\tiny JPM};
-        \node at (axis cs:-1.4,-1.3) [above left] {\tiny V};
-        \node at (axis cs:-1.3,-1.2) [above left] {\tiny MA};
-
-        \node at (axis cs:0.2,0.3) [below right] {\tiny KO};
-        \node at (axis cs:0.1,0.2) [below right] {\tiny PG};
-        \node at (axis cs:0.3,0.1) [below right] {\tiny WMT};
-
-        \legend{Technology, Financial, Consumer}
-        \end{axis}
-    \end{tikzpicture}
-\end{frame}
-
-\begin{frame}{Correlation Structure}
-    \begin{tikzpicture}
-        \begin{axis}[
-            width=\textwidth,
-            height=0.7\textheight,
-            xlabel=Variables,
-            ylabel=Variables,
-            title=Variable Correlation Heatmap,
-            colormap/jet,
-            colorbar,
-            point meta min=-1,
-            point meta max=1,
-            enlargelimits=false,
-            axis equal image,
-            xtick={0,1,2,3,4,5},
-            ytick={0,1,2,3,4,5},
-            xticklabels={Open,High,Low,Close,Vol,Adj},
-            yticklabels={Open,High,Low,Close,Vol,Adj},
-            xticklabel style={rotate=45},
-            scaled ticks=false
-        ]
-
-        \addplot[matrix plot*,point meta=explicit] table [meta=c] {
-            x y c
-            0 0 1
-            0 1 0.95
-            0 2 0.94
-            0 3 0.96
-            0 4 0.1
-            0 5 0.97
-            1 0 0.95
-            1 1 1
-            1 2 0.96
-            1 3 0.97
-            1 4 0.1
-            1 5 0.96
-            2 0 0.94
-            2 1 0.96
-            2 2 1
-            2 3 0.95
-            2 4 0.1
-            2 5 0.94
-            3 0 0.96
-            3 1 0.97
-            3 2 0.95
-            3 3 1
-            3 4 0.1
-            3 5 0.98
-            4 0 0.1
-            4 1 0.1
-            4 2 0.1
-            4 3 0.1
-            4 4 1
-            4 5 0.1
-            5 0 0.97
-            5 1 0.96
-            5 2 0.94
-            5 3 0.98
-            5 4 0.1
-            5 5 1
-        };
-        \end{axis}
-    \end{tikzpicture}
-\end{frame}
-
-
-\begin{frame}[CDPCA Loading Matrix]
-    \begin{table}[htbp]
-        \centering
-        \caption{CDPCA Loading Matrix}
-        \begin{tabular}{@{}lcc@{}}
-            \toprule
-            \textbf{Variable} & \textbf{Component 1 (C1)} & \textbf{Component 2 (C2)} \\
-            \midrule
-            Open     & 0.4469 & 0.0000 \\
-            High     & 0.4471 & 0.0000 \\
-            Low      & 0.4467 & 0.0000 \\
-            Close    & 0.4469 & 0.0000 \\
-            Volume   & 0.0000 & 1.0000 \\
-            Adjusted & 0.4485 & 0.0000 \\
-            \bottomrule
-        \end{tabular}
-        \label{tab:cdpca-loading-matrix}
-    \end{table}
+       \legend{Component 1, Component 2}
+       \end{axis}
+   \end{tikzpicture}
 \end{frame}
 
 \begin{frame}
@@ -444,15 +272,273 @@ Oleksandr Solovei ( 126784 )
 \begin{frame}
     \frametitle{Handling Missing Data in CDPCA}
 
+
     \begin{itemize}
-        \item CDPCA, being a variant of PCA, must be adapted to account for missing data:
-        \begin{itemize}
-            \item Imputation: Replacing missing values with statistical estimates (mean, median, or regression-based methods).
-            \item Model-based Methods: Using algorithms that can handle missing data directly (e.g., Expectation-Maximization, Bayesian approaches).
-            \item Data Filtering: Removing rows or columns with excessive missing values (but potentially losing information).
-        \end{itemize}
+        \item Imputation: Replacing missing values with statistical estimates (mean, median, or regression-based methods).
+        \item Model-based Methods: Using algorithms that can handle missing data directly (e.g., Expectation-Maximization, Bayesian approaches).
+        \item Data Filtering: Removing rows or columns with excessive missing values (but potentially losing information).
     \end{itemize}
 
+
+\end{frame}
+
+\begin{frame}{Missing Data Analysis}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Imputation Methods}
+                \begin{itemize}
+                    \item Mean Imputation
+                    \item Median Imputation
+                    \item K-Nearest Neighbors
+                    \item EM Algorithm
+                    \item Data Filtering
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Analysis Setup}
+                \begin{itemize}
+                    \item 5\% missing data
+                    \item 9 stocks, 6 variables
+                    \item 2-year period
+                    \item CDPCA: P=3, Q=2
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Mean Imputation: Example}
+   \begin{block}{Original Data}
+       Stock prices for 5 days:
+       \[
+       X = [100, 102, \text{NA}, 103, 101]
+       \]
+   \end{block}
+
+   \begin{block}{Step-by-step Imputation}
+       \begin{enumerate}
+           \item Sum non-missing values:\\
+           $100 + 102 + 103 + 101 = 406$
+           \item Calculate mean using formula $\frac{\sum_{i=1}^{n} x_i}{n}$:\\
+           $\bar{x} = \frac{406}{4} = 101.5$
+           \item Replace NA:\\
+           $X_{\text{imputed}} = [100, 102, \mathbf{101.5}, 103, 101]$
+       \end{enumerate}
+   \end{block}
+\end{frame}
+
+\begin{frame}{Median Imputation: Example}
+   \begin{block}{Original Data}
+       Stock prices for 5 days:
+       \[
+       X = [100, 102, \text{NA}, 103, 101]
+       \]
+   \end{block}
+
+   \begin{block}{Step-by-step Imputation}
+       \begin{enumerate}
+           \item Arrange non-missing values in ascending order:\\
+           $[100, 101, 102, 103]$
+           \item Identify the median:\\
+           For $n=4$, the median is the average of the middle two values:\\
+           $\text{Median} = \frac{101 + 102}{2} = 101.5$
+           \item Replace NA:\\
+           $X_{\text{imputed}} = [100, 102, \mathbf{101.5}, 103, 101]$
+       \end{enumerate}
+   \end{block}
+\end{frame}
+
+\begin{frame}{K-Nearest Neighbors (KNN) Imputation: Example}
+   \begin{block}{Original Data}
+       Stock prices for 5 days:
+       \[
+       X = [100, 102, \text{NA}, 103, 101]
+       \]
+   \end{block}
+
+   \begin{block}{Step-by-step Imputation}
+       \begin{enumerate}
+           \item Choose $k=2$ nearest neighbors based on the most similar observations in the dataset:
+           \begin{itemize}
+               \item Consider values close in time or other similar variables.
+               \item Here, neighbors are $102$ and $103$ (values adjacent to the missing value in this example).
+           \end{itemize}
+           \item Calculate the mean of $k$ nearest neighbors:\\
+           $\hat{x} = \frac{102 + 103}{2} = 102.5$
+           \item Replace NA:\\
+           $X_{\text{imputed}} = [100, 102, \mathbf{102.5}, 103, 101]$
+       \end{enumerate}
+   \end{block}
+
+   % \begin{block}{Key Notes}
+   %     \begin{itemize}
+   %         \item KNN considers similarity between rows (e.g., based on distances in a multidimensional feature space).
+   %         \item Effective for capturing local patterns but computationally intensive for large datasets.
+   %     \end{itemize}
+   % \end{block}
+\end{frame}
+
+\begin{frame}{Expectation-Maximization (EM) Imputation: Example}
+   \begin{block}{Original Data}
+       Stock prices for 5 days:
+       \[
+       X = [100, 102, \text{NA}, 103, 101]
+       \]
+   \end{block}
+
+   \begin{block}{Step-by-step Imputation}
+       \begin{enumerate}
+           \item Assign an initial guess for $\text{NA}$ (e.g., the mean of observed values):
+           $X_{\text{init}} = [100, 102, 101.5, 103, 101]$.
+
+           \item Expectation: Use the observed data and current estimates to compute statistical parameters (mean $\mu$, variance $\sigma^2$).
+           Example: $\mu = 101.9$, $\sigma^2 = 1.56$.
+
+           \item Maximization: Update the missing value based on these parameters. Replace $\text{NA}$ with the expected value conditioned on $\mu$ and $\sigma^2$:\\
+           $X_{\text{updated}} = [100, 102, \mathbf{101.9}, 103, 101]$.
+
+           \item Repeat Expectation and Maximization steps until convergence.
+       \end{enumerate}
+   \end{block}
+
+   % \begin{block}{Key Notes}
+   %     \begin{itemize}
+   %         \item Iterative approach ensures convergence to a statistically consistent estimate.
+   %         \item Assumes data follows an underlying distribution (e.g., Gaussian).
+   %         \item Suitable for complex datasets but computationally intensive.
+   %     \end{itemize}
+   % \end{block}
+\end{frame}
+
+\begin{frame}{Data Filtering: Example}
+   \begin{block}{Original Data}
+       Stock prices for 6 days:
+       \[
+       X = [100, 102, \text{NA}, 103, \text{NA}, 101]
+       \]
+   \end{block}
+
+   \begin{block}{Approach: Filter Out Missing Data}
+       \begin{enumerate}
+           \item Identify Missing Values:
+           Locate the positions of missing data:
+           $X_{\text{NA}} = [\text{Index 3}, \text{Index 5}]$.
+
+           \item Remove Rows with Missing Values:
+           Exclude any rows (or days) with $\text{NA}$ values:
+           $X_{\text{filtered}} = [100, 102, 103, 101]$.
+
+           \item Resulting Dataset:
+           Filtered data only contains complete records:
+           \[
+           X_{\text{filtered}} = [100, 102, 103, 101]
+           \]
+       \end{enumerate}
+   \end{block}
+
+   % \begin{block}{Key Notes}
+   %     \begin{itemize}
+   %         \item Pros: Simple to implement; ensures clean data.
+   %         \item Cons: May lead to loss of valuable information, especially if many entries are missing.
+   %         \item When to Use: Best for datasets with sparse missing values.
+   %     \end{itemize}
+   % \end{block}
+\end{frame}
+
+
+\begin{frame}{Method Comparison}
+    \begin{block}{Key Findings}
+        \begin{itemize}
+            \item Data Filtering: Highest cluster deviance but information loss
+            \item EM: Best balance between deviance and error
+            \item Mean/Median: Similar performance, simple implementation
+            \item KNN: Good for preserving local structure
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{Recommendations}
+        \begin{itemize}
+            \item Use EM for comprehensive analysis
+            \item Consider KNN for pattern preservation
+            \item Data Filtering when quality > quantity
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+
+\begin{frame}{Imputation Results}
+   \begin{tikzpicture}
+       \begin{axis}[
+           width=\textwidth,
+           height=0.7\textheight,
+           xlabel=Method,
+           title=CDPCA Metrics by Imputation Method,
+           symbolic x coords={Original,Mean,Median,KNN,EM,Filtered},
+           xtick=data,
+           xticklabel style={rotate=45, anchor=east},
+           ylabel=Cluster Deviance (\%),
+           legend pos=north east,
+           ybar=0pt,
+           bar width=7pt,
+           ymin=70,
+           ymax=75,
+           axis y line*=left,
+       ]
+
+       \addplot[fill=blue!40] coordinates {
+           (Original,73.95)
+           (Mean,72.21)
+           (Median,72.56)
+           (KNN,74.09)
+           (EM,73.48)
+           (Filtered,73.99)
+       };
+
+       \end{axis}
+
+       \begin{axis}[
+           width=\textwidth,
+           height=0.7\textheight,
+           symbolic x coords={Original,Mean,Median,KNN,EM,Filtered},
+           ylabel=Error Norm,
+           ymin=0.015,
+           ymax=0.03,
+           axis y line*=right,
+           axis x line=none,
+       ]
+
+       \addplot[red,only marks,mark=*,mark size=3pt] coordinates {
+           (Original,0.01862)
+           (Mean,0.02086)
+           (Median,0.02084)
+           (KNN,0.01858)
+           (EM,0.01879)
+           (Filtered,0.02558)
+       };
+
+       \legend{Error Norm}
+
+       \end{axis}
+   \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Summary: CDPCA and Missing Data}
+   \begin{block}{CDPCA Contributions}
+       \begin{itemize}
+           \item Combines imputation and PCA.
+           \item Handles different data missing patterns.
+           \item Improves latent data representation.
+       \end{itemize}
+   \end{block}
+
+   \begin{block}{Why CDPCA?}
+       \begin{itemize}
+           \item Reduces bias in imputation.
+           \item Enhances interpretability.
+           \item Efficient for high-dimensional data.
+       \end{itemize}
+   \end{block}
 \end{frame}
 
 \end{document}
