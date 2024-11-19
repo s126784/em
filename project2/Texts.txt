@@ -1,0 +1,271 @@
+﻿EM
+Date: 20/11/2024
+
+
+Good Afternoon, today, we’ll dive into an exciting exploration of (CDPCA) in the world of financial markets.
+
+
+Slide 2
+
+Let’s start with
+Problem Statement
+1. High Dimensionality of Financial Market Data:Financial market data involves many variables (open,close,high,low prices etc) across assets, making analysis complex.
+
+2. Complex Correlations Between Market Sectors:Different market sectors (like tech, consumers and finance) are interlinked, making patterns harder to detect.
+
+3. Missing Data in Financial Time Series:Gaps in financial data (due to holidays or errors) complicate analysis it can lead to biased results and hinder the identification of market patterns.
+
+4. Challenge in Identifying Distinct Market Patterns: The combination of high dimensionality, complex correlations, and missing data makes it challenging to discern clear and distinct patterns in the market, which are essential for making informed investment decisions.
+
+Objectives
+   1. Apply CDPCA to Financial Market Data: Apply CDPCA to analyze complex, high-dimensional financial data effectively.
+   2. Integrate Missing Data Handling into the CDPCA Framework: Integrate ways to manage missing data into the CDPCA method for practical use.
+   3. Address the Challenge of Missing Data Using Different Techniques:Test methods likeMean, Median , KNN and EM to deal with data gaps.
+
+   4. Identify Disjoint Components in Market Sectors: The final objective is to uncover distinct components within market sectors, allowing for clearer interpretations and insights that can guide investment strategies.
+This structured approach aims to enhance the understanding of financial markets while addressing the complexities introduced by high dimensionality and missing data, ultimately leading to better investment decisions.
+
+
+
+
+Slide 3
+
+Why CDPCA for Financial Markets
+Limitations of Traditional Methods:
+      1. PCA:
+      * Hard to Interpret: PCA mixes variables into components, making it difficult to understand the financial relationships and derive actionable insights.
+      2. K-means Clustering:
+      * Misses Structure: K-means focuses on grouping data but ignores relationships between variables, often overlooking key market dynamics.
+      3. Need for Clear Patterns:
+      * Investors require simple, interpretable sector-based patterns to make informed decisions.
+Key Advantages of CDPCA:
+      1. Disjoint Components:
+      * Each asset belongs to only one group, making sector assignments clear and unambiguous.
+      2. Simultaneous Clustering and Reduction:
+      * Combines clustering with dimensionality reduction, effectively grouping similar assets and simplifying complex data.
+      3. Improved Interpretability:
+      * Reveals clear sector-based patterns, making it easier for analysts to understand market relationships and guide investments.
+CDPCA overcomes the challenges of PCA and K-means, offering a structured, interpretable approach to analyze complex financial data. It helps identify clear patterns and groups, aiding better investment decisions.
+
+
+
+
+Slide 4,5,6,7
+
+
+CDPCA Model:
+      * Mathematical Framework:
+The equation X = U ˆYA′ + E breaks down as:
+      * X: A Matrix showing asset performance over time (I rows = assets, J columns =stock variables(open,close,high,low,volume and adjusted)).
+      * U: Assigns each asset to a cluster (I rows = assets, P columns = clusters).
+      * ˆY: Centroid Matrix in the reduced space[a]
+      * A: Shows how characteristics contribute to  (Q shows PC’s of CDPCA and, J columns =stock variables(open,close,high,low,volume and adjusted).
+      * E: The error, capturing unexplained differences in the data. (IxJ)
+CDPCA Algorithm:
+      1. Steps (Alternating Least Squares - ALS):
+      * Step 1: Update clusters (U) to assign assets to clusters.
+      * Step 2: Find cluster centroids (ˆY) based on updated clusters.
+      * Step 3: Update component loadings (A) for the clusters.
+      * Step 4: Repeat these steps until results stabilize (convergence).
+Optimization:
+      * The algorithm aims to maximize between-cluster variance—clearly distinguishing groups from each other.
+Visualization of CDPCA Flow:
+      * Input the data (X).
+      * Initialize clusters (U) and Components (PC’s) (A).
+      * Iteratively:
+      * Update clusters (U).
+      * Recalculate PC’s (A) and centroids (ˆY).
+      * Repeat until results stabilize.
+
+
+Challenges with Missing Data in Financial Time Series:
+      1. Common Causes:
+      * Market Holidays: No data on non-trading days.
+      * Data Errors: Issues in data collection processes.
+      * Partial Data: Incomplete data for certain periods or assets.
+      2. Impact on Analysis:
+      * Missing values disrupt PCA computations leads to disrupt CDPCA
+      * Gaps make it harder to identify patterns and produce reliable results.
+CDPCA groups financial assets and simplifies complex data through a step-by-step algorithm. However, missing data poses challenges, requiring robust methods to handle gaps for accurate analysis.
+
+
+Slide 8
+
+Explanation for Variables and Properties:
+What does "standardized" mean?
+Standardization scales data to have a mean of 0 and a standard deviation of 1, making variables comparable across different units.
+Why 6 variables?
+These variables are essential for analyzing stock performance. For example, "Adjusted Close" accounts for corporate actions like dividends or stock splits.
+Why these 9 stocks?
+They were chosen to represent three distinct market sectors, providing diversity and making it easier to identify sector-based patterns.
+
+
+
+
+Slide 9
+
+
+
+
+      * Observations: 4,509 in total (501 trading days × 9 stocks).
+      * Variables: 6 per stock (Open, High, Low,Close and Adjusted prices and Volume)
+      * After cleaning, there were no missing values left in the final dataset.
+      * Variable statistics:
+      * Volume ranged from -0.91 to 6.79 after standardization.
+      * Prices ranged from -1.33 to 2.57.
+      * High correlations were observed within price variables, which is expected since Open, High, Low,Close and Adjusted prices are closely related.
+Additionally, the dataset was organized by market sector for better interpretation (Also helps in Clustering)
+      1. Technology: AAPL, MSFT, GOOGL.
+      2. Finance: JPM, V, MA.
+      3. Consumer: KO, PG, WMT.”
+
+
+Why are ranges shown for Volume and Price?
+These standardized ranges indicate data variability and help identify any outliers or anomalies.
+Why focus on correlations within price variables?
+Correlations show that prices move together, which helps in identifying underlying patterns or common drivers within sectors.
+
+
+
+
+Slide 10
+
+
+This slide visualizes how variables contribute to the two primary CDPCA components.
+      * The graph shows variable loadings, which measure the strength of each variable’s contribution to a component.
+      * Component 1: Dominated by variables like Adjusted, Close, High, low and open.
+      * Component 2: Influenced by variable Volume.
+By interpreting these components, we can understand which variables are most influential in separating clusters.
+
+
+What are "variable loadings"?
+They indicate how much a variable contributes to a component. Higher values mean stronger contributions.
+Why split variables across two components?
+Each component captures distinct aspects of the data. For example, Component 1 might highlight overall trends, while Component 2 focuses on variability or anomalies. 
+
+
+
+
+Slide 11
+
+
+Missing data is a common issue in financial datasets, and ignoring it can lead to inaccurate results. Here are the methods we used to handle missing values:
+      1. Imputation: Replacing missing values with estimates based on existing data.
+      * Techniques include Mean, Median, or more advanced approaches like K-Nearest Neighbors (KNN).
+      2. Model-based Methods: Algorithms like EM handle missing data directly, without requiring manual imputation.
+      3. Data Filtering: Removing rows or columns with missing data, which avoids errors but may lose important information.”
+
+
+Why is missing data a problem?
+It can bias analyses, leading to incorrect conclusions.
+Which method is best?
+It depends on the dataset. For instance, EM works well when preserving overall patterns is critical, while filtering is suitable for smaller datasets with sparse missing values.
+
+
+“Handling missing data is like filling potholes on a highway—it’s tedious but essential for a smooth ride!”
+
+
+
+
+Slide 17
+
+
+This slide summarizes how different missing data handling methods performed during our CDPCA experiments.
+We focused on two key metrics:
+      1. Cluster Deviance: A measure of how distinct the clusters are. Higher deviance means better separation.
+      2. Error Norm: The level of error in reconstructing the original data. Lower values indicate better accuracy.
+Key Findings:
+      * EM performed best overall, striking a balance between deviance and error.
+      * KNN preserved local patterns well, but it took more time and resources.
+      * Data Filtering had the highest deviance but caused significant information loss.
+      * Mean and Median imputation were fast but less accurate than EM or KNN.
+
+
+Why focus on cluster deviance and error norm?
+Cluster deviance reflects how well-separated clusters are, which is critical for clear market insights.
+Error norm ensures that the imputation method doesn’t distort the data too much.
+Why is EM the best?
+EM leverages statistical properties of the dataset to fill gaps without oversimplifying or introducing bias.
+
+
+
+
+Slide 18
+
+
+
+
+Why introduce a 5% missing rate?
+To mimic real-world scenarios where missing data is inevitable.
+Why 3 clusters?
+To align with the three distinct market sectors.[b]
+Why limit iterations?
+To ensure computational efficiency without compromising accuracy.
+
+
+
+
+Slide 19
+
+
+
+
+This slide outlines how we implemented our analysis in R:
+      * Libraries used:
+      1. quantmod for acquiring financial data.
+      2. Amelia for EM imputation.
+      3. VIM for KNN imputation.
+      * Steps:
+      1. Introduce missing data by randomly removing 5% of values.
+      2. Apply different imputation methods (Mean, Median, KNN, EM).
+      3. Run the CDPCA algorithm, with parameters P=3 and Q=2, tolerance , and maximum iterations set to 100.
+
+
+Why random missing data?
+To avoid bias in how missing values are distributed, ensuring fairness in evaluating methods.
+
+
+
+
+
+
+Slide 21
+
+
+Finally, here’s how the different imputation methods performed in terms of Cluster Deviance and Error Norm:
+         * Cluster Deviance:
+         * EM and KNN were the top performers, with KNN slightly edging out EM in cluster quality.
+         * Data Filtering had the highest deviance, but at the cost of significant information loss.
+         * Error Norm:
+         * EM achieved the lowest error, followed by KNN.
+         * Mean and Median imputation introduced higher errors, though they were computationally faster.
+
+
+
+Why prioritize both deviance and error?
+         * Good deviance ensures clusters are meaningful, while low error prevents distortion in the dataset.
+Why not always use EM?
+         * EM is computationally intensive, making it less suitable for real-time or very large datasets.
+
+
+
+
+“If Mean and Median imputation were quick-fix band-aids, EM is the fancy surgery that takes longer but leaves no scars!”
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[a]Y: Cluster centroids matrix (P×Q) representing cluster centers in reduced component space
+[b]Chosing P=3 based on the domain knowledge, but it doesn't mean that we have to choose the number of sectors as P all time. We try to find a balance between model complexity and interpretability

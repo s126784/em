@@ -556,19 +556,57 @@ cdpc_results <- CDpca(X_em, P=3, Q=2,
    \end{tikzpicture}
 \end{frame}
 
+\begin{frame}{Cluster Quality Analysis: Silhouette Scores}
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth,
+            height=0.6\textheight,
+            xlabel=Method,
+            ylabel=Silhouette Score,
+            symbolic x coords={Original,Mean,Median,KNN,EM,Filtered},
+            xtick=data,
+            xticklabel style={rotate=45, anchor=east},
+            ybar,
+            bar width=15pt,
+            ymin=0.3,
+            ymax=0.6,
+            nodes near coords,
+            nodes near coords style={font=\small},
+            every node near coord/.append style={rotate=0, anchor=west}
+        ]
+
+        \addplot[fill=blue!40] coordinates {
+            (Original,0.526)
+            (Mean,0.464)
+            (Median,0.476)
+            (KNN,0.527)
+            (EM,0.433)
+            (Filtered,0.527)
+        };
+
+        \end{axis}
+    \end{tikzpicture}
+
+    \begin{itemize}
+        \item KNN and Filtered methods maintain original cluster quality (0.527)
+        \item All methods show moderate cluster structure ($> 0.4$)
+        \item EM shows lowest cluster separation but still acceptable
+    \end{itemize}
+\end{frame}
+
 \begin{frame}{Detailed Method Comparison}
     \begin{table}
         \centering
-        \begin{tabular}{lccccc}
+        \begin{tabular}{lcccccc}
             \hline
-            \textbf{Method} & \textbf{Deviance} & \textbf{Error} & \textbf{Time} & \textbf{Memory} \\
+            \textbf{Method} & \textbf{Deviance} & \textbf{Error} & \textbf{Silhouette} & \textbf{Time} & \textbf{Memory} \\
             \hline
-            Original & 73.95\% & 0.01862 & - & - \\
-            Mean & 72.21\% & 0.02086 & Fast & Low \\
-            Median & 72.56\% & 0.02084 & Fast & Low \\
-            KNN & 74.09\% & 0.01858 & Medium & Medium \\
-            EM & 73.48\% & 0.01879 & Slow & High \\
-            Filtered & 73.99\% & 0.02558 & Fast & Low \\
+            Original & 73.95\% & 0.01862 & 0.526 & - & - \\
+            Mean & 72.21\% & 0.02086 & 0.464 & Fast & Low \\
+            Median & 72.56\% & 0.02084 & 0.476 & Fast & Low \\
+            KNN & 74.09\% & 0.01858 & 0.527 & Medium & Medium \\
+            EM & 73.48\% & 0.01879 & 0.433 & Slow & High \\
+            Filtered & 73.99\% & 0.02558 & 0.527 & Fast & Low \\
             \hline
         \end{tabular}
     \end{table}

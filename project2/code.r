@@ -82,6 +82,7 @@ cat("\nAfter cleaning missing values:", dim(combined_data)[1], "rows x", dim(com
 # ============= STEP 5: PREPARE ANALYSIS MATRIX =============
 
 set.seed(123155 * (126784 -123177 ))
+#set.seed(123155+126784+123177)
 
 # Select numeric variables for analysis
 price_vars <- c("Open", "High", "Low", "Close", "Volume", "Adjusted")
@@ -103,7 +104,7 @@ cat("\nNumber of variables (p):", p)
 # cat("\np/n ratio:", round(p/n, 4))
 
 
-missing_count <- floor(n * p * 0.05)
+missing_count <- floor(n * p * 0.2)
 missing_indices <- sample(1:(n*p), missing_count)
 X_missing <- X_scaled
 X_missing[missing_indices] <- NA
@@ -178,7 +179,7 @@ cdpc_results <- list(
 
 # ============= STEP 11: COMPARE RESULTS =============
 metrics <- data.frame(
-  Method = c("Original", "Mean", "Median", "KNN", "EMax", "Filtered"),
+  Method = c("Original", "Mean", "Median", "KNN", "Emax", "Filtered"),
   bcdev = sapply(cdpc_results, function(x) x$bcdev),
   Enorm = sapply(cdpc_results, function(x) x$Enorm)
 )
@@ -205,3 +206,73 @@ ggplot(metrics, aes(x=Method, y=Enorm)) +
   labs(title="Error Norm by Method", y="Error Norm") +
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
   coord_cartesian(ylim = get_range(metrics$Enorm))
+
+# ============= STEP 13: CALCULATE SILHOUETTE SCORES FOR EACH METHOD =============
+
+# Function to calculate silhouette score
+calculate_silhouette <- function(X, cdpca_result) {
+  # Extract cluster assignments from tableclass
+  clusters <- cdpca_result$tableclass$"CDPCA Class"
+
+  # Print cluster information for debugging
+  cat("\nNumber of observations:", length(clusters))
+  cat("\nUnique clusters:", length(unique(clusters)))
+  cat("\nCluster distribution:")
+  print(table(clusters))
+
+  # Check if we have at least 2 clusters
+  if(length(unique(clusters)) < 2) {
+    cat("\nWarning: Less than 2 clusters found")
+    return(NA)
+  }
+
+  # Calculate silhouette score
+  sil <- silhouette(clusters, dist(X))
+  return(mean(sil[, "sil_width"]))
+}
+
+# Calculate silhouette scores
+cat("\n=== Silhouette Scores ===\n")
+
+cat("\nOriginal data:")
+sil_original <- calculate_silhouette(X_scaled, cdpc_results$original)
+cat("\nScore:", sil_original)
+
+cat("\n\nMean imputation:")
+sil_mean <- calculate_silhouette(X_mean, cdpc_results$mean)
+cat("\nScore:", sil_mean)
+
+cat("\n\nMedian imputation:")
+sil_median <- calculate_silhouette(X_median, cdpc_results$median)
+cat("\nScore:", sil_median)
+
+cat("\n\nKNN imputation:")
+sil_knn <- calculate_silhouette(X_knn, cdpc_results$knn)
+cat("\nScore:", sil_knn)
+
+cat("\n\nEM imputation:")
+sil_em <- calculate_silhouette(X_em_expectation_maximization, cdpc_results$em_expectation_maximization)
+cat("\nScore:", sil_em)
+
+cat("\n\nFiltered data:")
+sil_filtered <- calculate_silhouette(X_filtered, cdpc_results$filtered)
+cat("\nScore:", sil_filtered)
+
+# Create summary dataframe
+silhouette_scores <- data.frame(
+  Method = c("Original", "Mean", "Median", "KNN", "EM", "Filtered"),
+  Score = c(sil_original, sil_mean, sil_median, sil_knn, sil_em, sil_filtered)
+)
+
+# Create visualization
+silhouette_plot <- ggplot(silhouette_scores, aes(x = Method, y = Score)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Silhouette Scores by Method",
+       y = "Silhouette Score") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Print results
+cat("\n\n=== Summary of Silhouette Scores ===\n")
+print(silhouette_scores)
+print(silhouette_plot)
