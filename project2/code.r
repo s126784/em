@@ -80,6 +80,9 @@ cat("\nAfter cleaning missing values:", dim(combined_data)[1], "rows x", dim(com
 
 
 # ============= STEP 5: PREPARE ANALYSIS MATRIX =============
+
+set.seed(123155 * (126784 -123177 ))
+
 # Select numeric variables for analysis
 price_vars <- c("Open", "High", "Low", "Close", "Volume", "Adjusted")
 cat("\n\nAnalysis Variables:")
@@ -100,7 +103,7 @@ cat("\nNumber of variables (p):", p)
 # cat("\np/n ratio:", round(p/n, 4))
 
 
-missing_count <- floor(n * p * 0.10)
+missing_count <- floor(n * p * 0.05)
 missing_indices <- sample(1:(n*p), missing_count)
 X_missing <- X_scaled
 X_missing[missing_indices] <- NA
@@ -160,7 +163,7 @@ X_filtered <- na.omit(X_missing)
 print(dim(X_filtered))
 
 # ============= STEP 10: APPLY CDPCA TO ALL VERSIONS =============
-set.seed(123155 + 123177 + 126784)
+
 P <- 3  # Number of clusters
 Q <- 2  # Number of components
 

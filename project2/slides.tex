@@ -60,7 +60,7 @@ Oleksandr Solovei ( 126784 )
 \begin{frame}{Motivation}
     \begin{block}{Why CDPCA for Financial Markets?}
         \begin{itemize}
-            \item Traditional PCA: Components can be hard to interpret due to mixed loadings
+            \item PCA: Components can be hard to interpret due to mixed loadings
             \item K-means alone: Misses underlying market structure
             \item Need: Clear sector-based patterns for investment decisions
         \end{itemize}
@@ -106,7 +106,6 @@ Oleksandr Solovei ( 126784 )
         \begin{equation*}
             \max_{\mathbf{U},\hat{\mathbf{Y}},\mathbf{A}} \|\mathbf{U}\hat{\mathbf{Y}}\mathbf{A}'\|^2
         \end{equation*}
-        Subject to structural constraints
     \end{block}
 \end{frame}
 
@@ -133,6 +132,25 @@ Oleksandr Solovei ( 126784 )
         \draw [arrow] (component) -- ++(0,-1.5) -| (cluster);
 
     \end{tikzpicture}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Introducing Missing Data Challenge}
+
+    \begin{itemize}
+        \item \textbf{Challenge: Missing Data in Time Series}
+        \begin{itemize}
+            \item In financial and stock market data, missing values are common due to various reasons, such as:
+            \begin{itemize}
+                \item Stock market holidays
+                \item Errors in data collection or reporting
+                \item Partial data availability across different time series
+            \end{itemize}
+            \item These missing values can significantly impact the results of principal component analysis (PCA), and even more so for CDPCA.
+        \end{itemize}
+
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Data Overview}
@@ -251,23 +269,6 @@ Oleksandr Solovei ( 126784 )
    \end{tikzpicture}
 \end{frame}
 
-\begin{frame}
-    \frametitle{Introducing a new element in the technique}
-
-    \begin{itemize}
-        \item \textbf{Challenge: Missing Data in Time Series}
-        \begin{itemize}
-            \item In financial and stock market data, missing values are common due to various reasons, such as:
-            \begin{itemize}
-                \item Stock market holidays
-                \item Errors in data collection or reporting
-                \item Partial data availability across different time series
-            \end{itemize}
-            \item These missing values can significantly impact the results of principal component analysis (PCA), and even more so for CDPCA.
-        \end{itemize}
-
-    \end{itemize}
-\end{frame}
 
 \begin{frame}
     \frametitle{Handling Missing Data in CDPCA}
@@ -282,33 +283,8 @@ Oleksandr Solovei ( 126784 )
 
 \end{frame}
 
-\begin{frame}{Missing Data Analysis}
-    \begin{columns}
-        \begin{column}{0.48\textwidth}
-            \begin{block}{Imputation Methods}
-                \begin{itemize}
-                    \item Mean Imputation
-                    \item Median Imputation
-                    \item K-Nearest Neighbors
-                    \item EM Algorithm
-                    \item Data Filtering
-                \end{itemize}
-            \end{block}
-        \end{column}
-        \begin{column}{0.48\textwidth}
-            \begin{block}{Analysis Setup}
-                \begin{itemize}
-                    \item 5\% missing data
-                    \item 9 stocks, 6 variables
-                    \item 2-year period
-                    \item CDPCA: P=3, Q=2
-                \end{itemize}
-            \end{block}
-        \end{column}
-    \end{columns}
-\end{frame}
 
-\begin{frame}{Mean Imputation: Example}
+\begin{frame}{Mean Imputation}
    \begin{block}{Original Data}
        Stock prices for 5 days:
        \[
@@ -328,7 +304,7 @@ Oleksandr Solovei ( 126784 )
    \end{block}
 \end{frame}
 
-\begin{frame}{Median Imputation: Example}
+\begin{frame}{Median Imputation}
    \begin{block}{Original Data}
        Stock prices for 5 days:
        \[
@@ -349,7 +325,7 @@ Oleksandr Solovei ( 126784 )
    \end{block}
 \end{frame}
 
-\begin{frame}{K-Nearest Neighbors (KNN) Imputation: Example}
+\begin{frame}{K-Nearest Neighbors (KNN) Imputation}
    \begin{block}{Original Data}
        Stock prices for 5 days:
        \[
@@ -379,7 +355,7 @@ Oleksandr Solovei ( 126784 )
    % \end{block}
 \end{frame}
 
-\begin{frame}{Expectation-Maximization (EM) Imputation: Example}
+\begin{frame}{Expectation-Maximization (EM) Imputation}
    \begin{block}{Original Data}
        Stock prices for 5 days:
        \[
@@ -411,7 +387,7 @@ Oleksandr Solovei ( 126784 )
    % \end{block}
 \end{frame}
 
-\begin{frame}{Data Filtering: Example}
+\begin{frame}{Data Filtering}
    \begin{block}{Original Data}
        Stock prices for 6 days:
        \[
@@ -461,8 +437,65 @@ Oleksandr Solovei ( 126784 )
         \begin{itemize}
             \item Use EM for comprehensive analysis
             \item Consider KNN for pattern preservation
-            \item Data Filtering when quality > quantity
+            \item Data Filtering when $quality > quantity$
         \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Experimental Setup}
+    \begin{block}{Dataset Configuration}
+        \begin{itemize}
+            \item Stocks: 9 (3 sectors × 3 stocks)
+            \item Variables per stock: 6
+            \item Time period: 2022-2023
+            \item Missing rate: 5\%
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{CDPCA Parameters}
+        \begin{itemize}
+            \item Number of clusters (P): 3
+            \item Number of components (Q): 2
+            \item Tolerance: $10^{-5}$
+            \item Maximum iterations: 100
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Implementation Details}
+    \begin{block}{R Implementation}
+        \begin{itemize}
+            \item Libraries: quantmod, Amelia, VIM
+            \item Data Structure: 501 trading days × 6 variables
+            \item Missing Data: 5\% randomly introduced
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{Key Functions}
+        \begin{itemize}
+            \item \texttt{CDpca()}: Core CDPCA algorithm
+            \item \texttt{get\_stock\_data()}: Data acquisition
+            \item \texttt{amelia()}: EM imputation
+            \item \texttt{kNN()}: KNN imputation
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Implementation Example}
+    \begin{block}{R Code for Missing Data Handling}
+        \begin{verbatim}
+# Create missing data pattern
+missing_count <- floor(n * p * 0.05)
+missing_indices <- sample(1:(n*p), missing_count)
+X_missing[missing_indices] <- NA
+
+# Apply EM imputation
+X_em <- amelia(X_missing, m=1)$imputations[[1]]
+
+# Run CDPCA
+cdpc_results <- CDpca(X_em, P=3, Q=2,
+                      tol=1e-5, maxit=100)
+        \end{verbatim}
     \end{block}
 \end{frame}
 
@@ -521,6 +554,24 @@ Oleksandr Solovei ( 126784 )
 
        \end{axis}
    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Detailed Method Comparison}
+    \begin{table}
+        \centering
+        \begin{tabular}{lccccc}
+            \hline
+            \textbf{Method} & \textbf{Deviance} & \textbf{Error} & \textbf{Time} & \textbf{Memory} \\
+            \hline
+            Original & 73.95\% & 0.01862 & - & - \\
+            Mean & 72.21\% & 0.02086 & Fast & Low \\
+            Median & 72.56\% & 0.02084 & Fast & Low \\
+            KNN & 74.09\% & 0.01858 & Medium & Medium \\
+            EM & 73.48\% & 0.01879 & Slow & High \\
+            Filtered & 73.99\% & 0.02558 & Fast & Low \\
+            \hline
+        \end{tabular}
+    \end{table}
 \end{frame}
 
 \begin{frame}{Summary: CDPCA and Missing Data}
