@@ -29,7 +29,7 @@
 Silvia Mastracci ( 123177 )\\
 Oleksandr Solovei ( 126784 )
 }
-\date{\today}
+\date{November 19, 2024}
 
 \begin{document}
 
@@ -41,7 +41,7 @@ Oleksandr Solovei ( 126784 )
     \begin{block}{Problem Statement}
         \begin{itemize}
             \item High dimensionality of financial market data
-            \item Complex correlations between market sectors
+            \item Complex patterns into different market sectors
             \item Missing data in financial time series adds another layer of complexity
             \item Challenge in identifying distinct market patterns
         \end{itemize}
@@ -52,7 +52,7 @@ Oleksandr Solovei ( 126784 )
             \item Apply CDPCA to financial market data
             \item Introduce a new element by integrating missing data handling into the CDPCA framework.
             \item Address the challenge of missing data using different techniques
-            \item Identify disjoint components in market sectors
+            \item Identify and interpret patterns across different market sectors
         \end{itemize}
     \end{block}
 \end{frame}
@@ -68,9 +68,9 @@ Oleksandr Solovei ( 126784 )
 
     \begin{block}{Key Advantages}
         \begin{itemize}
-            \item Disjoint components: Each asset belongs to exactly one component
-            \item Simultaneous clustering: Groups similar assets together
-            \item Enhanced interpretability: Clear sector-based patterns
+            \item Disjoint components: Each financial variable belongs to exactly one component
+            \item Simultaneous clustering: Groups similar market sectors together
+            \item Enhanced interpretability: Clear variable-based patterns within sectors
         \end{itemize}
     \end{block}
 \end{frame}
@@ -82,23 +82,23 @@ Oleksandr Solovei ( 126784 )
         \end{equation*}
         where:
         \begin{itemize}
-            \item $\mathbf{X}$: Matrix of asset returns $(I \times J)$
-            \item $\mathbf{U}$: Asset cluster membership $(I \times P)$
-            \item $\hat{\mathbf{Y}}$: Cluster centroids $(P \times Q)$
-            \item $\mathbf{A}$: Component loading matrix transposed $(Q \times J)$
-            \item $\mathbf{E}$: Error matrix $(I \times J)$
+        \item $\mathbf{X}$: Matrix of variables $(I \times J)$
+        \item $\mathbf{U}$: Sector cluster membership $(I \times P)$
+        \item $\hat{\mathbf{Y}}$: Cluster centroids $(P \times Q)$
+        \item $\mathbf{A}$: Component loading matrix transposed $(Q \times J)$
+        \item $\mathbf{E}$: Error matrix $(I \times J)$
         \end{itemize}
     \end{block}
 \end{frame}
 
 \begin{frame}{CDPCA Algorithm}
     \begin{block}{Alternating Least Squares (ALS) Steps}
-        \begin{enumerate}
-            \item Update asset clusters ($\mathbf{U}$)
-            \item Calculate cluster centroids ($\hat{\mathbf{Y}}$)
-            \item Update component loadings ($\mathbf{A}$)
-            \item Repeat until convergence
-        \end{enumerate}
+    \begin{enumerate}
+        \item Update sector clusters ($\mathbf{U}$)
+        \item Calculate cluster centroids ($\hat{\mathbf{Y}}$)
+        \item Update component loadings ($\mathbf{A}$)
+        \item Repeat until convergence
+    \end{enumerate}
     \end{block}
 
     \begin{block}{Optimization Problem}
@@ -111,27 +111,8 @@ Oleksandr Solovei ( 126784 )
 
 
 \begin{frame}{CDPCA Visualization: Process Flow}
-    \begin{tikzpicture}[node distance=2cm]
-        % Define styles
-        \tikzstyle{block} = [rectangle, draw, fill=blue!20,
-            text width=3cm, text centered, rounded corners, minimum height=1cm]
-        \tikzstyle{arrow} = [thick,->,>=stealth]
-
-        % Nodes
-        \node [block] (data) {Input Data Matrix\\$\mathbf{X}$};
-        \node [block, below of=data] (init) {Initialize\\$\mathbf{U}$ and $\mathbf{A}$};
-        \node [block, below of=init] (cluster) {Update Clusters\\$\mathbf{U}$};
-        \node [block, right of=cluster, xshift=4cm] (component) {Update Components\\$\mathbf{A}$};
-        \node [block, above of=component] (centroid) {Calculate Centroids\\$\hat{\mathbf{Y}}$};
-
-        % Arrows
-        \draw [arrow] (data) -- (init);
-        \draw [arrow] (init) -- (cluster);
-        \draw [arrow] (cluster) -- (centroid);
-        \draw [arrow] (centroid) -- (component);
-        \draw [arrow] (component) -- ++(0,-1.5) -| (cluster);
-
-    \end{tikzpicture}
+    \centering
+    \includegraphics[width=0.9\textwidth,height=0.7\textheight,keepaspectratio]{cdpca-chart.png}
 \end{frame}
 
 
@@ -612,22 +593,23 @@ cdpc_results <- CDpca(X_em, P=3, Q=2,
     \end{table}
 \end{frame}
 
-\begin{frame}{Summary: CDPCA and Missing Data}
-   \begin{block}{CDPCA Contributions}
-       \begin{itemize}
-           \item Combines imputation and PCA.
-           \item Handles different data missing patterns.
-           \item Improves latent data representation.
-       \end{itemize}
-   \end{block}
-
-   \begin{block}{Why CDPCA?}
-       \begin{itemize}
-           \item Reduces bias in imputation.
-           \item Enhances interpretability.
-           \item Efficient for high-dimensional data.
-       \end{itemize}
-   \end{block}
+\begin{frame}{Summary: Missing Data in CDPCA}
+    \begin{block}{Key Findings}
+        \begin{itemize}
+        \item EM Imputation: Best balance between deviance and error
+        \item KNN: Maintained original cluster quality (0.527 silhouette score)
+        \item Data Filtering: High cluster deviance but information loss
+        \item Mean/Median: Simple but less effective for complex patterns
+        \end{itemize}
+    \end{block}
+    \begin{block}{Recommendations}
+        \begin{itemize}
+        \item Use EM imputation for comprehensive market analysis
+        \item Consider KNN when pattern preservation is critical
+        \item Avoid simple mean/median imputation for complex financial data
+        \item Use filtering only when data quality is priority over quantity
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \end{document}
