@@ -2,7 +2,7 @@
 library(tidyverse)
 
 # Read the CSV file
-data <- read.csv("~/Lessons/EM/Project3/brain_sc_expression.csv", row.names=1)  # row.names=1 if first column is cell IDs
+data <- read.csv("~/Lessons/EM/Project3/pbmc68k_reduced.csv", row.names=1)  # row.names=1 if first column is cell IDs
 data
 
 # Print initial data summary to check for issues
