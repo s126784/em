@@ -15,6 +15,7 @@ library(corrplot)
 library(Amelia)
 library(ggplot2)
 library(mi)
+library("sda")
 
 # ============= STEP 2: DEFINE STOCK SYMBOLS =============
 tech_stocks <- c("AAPL", "MSFT", "GOOGL")
@@ -154,7 +155,7 @@ for(j in 1:ncol(X_median)) {
 }
 
 # 9.3. KNN Imputation
-X_knn <- as.matrix(VIM::kNN(X_missing)[,1:ncol(X_missing)])
+#X_knn <- as.matrix(VIM::kNN(X_missing)[,1:ncol(X_missing)])
 
 # 9.4. EM Algorithm
 X_em_expectation_maximization <- amelia(X_missing, m=1)$imputations[[1]]
@@ -172,14 +173,14 @@ cdpc_results <- list(
   original = CDpca(X_scaled, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
   mean = CDpca(X_mean, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
   median = CDpca(X_median, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
-  knn = CDpca(X_knn, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
+  #knn = CDpca(X_knn, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
   em_expectation_maximization = CDpca(X_em_expectation_maximization, P=P, Q=Q, tol=1e-5, maxit=100, r=10),
   filtered = CDpca(X_filtered, P=P, Q=Q, tol=1e-5, maxit=100, r=10)
 )
 
 # ============= STEP 11: COMPARE RESULTS =============
 metrics <- data.frame(
-  Method = c("Original", "Mean", "Median", "KNN", "Emax", "Filtered"),
+  Method = c("Original", "Mean", "Median", "Emax", "Filtered"),
   bcdev = sapply(cdpc_results, function(x) x$bcdev),
   Enorm = sapply(cdpc_results, function(x) x$Enorm)
 )
@@ -246,9 +247,9 @@ cat("\n\nMedian imputation:")
 sil_median <- calculate_silhouette(X_median, cdpc_results$median)
 cat("\nScore:", sil_median)
 
-cat("\n\nKNN imputation:")
-sil_knn <- calculate_silhouette(X_knn, cdpc_results$knn)
-cat("\nScore:", sil_knn)
+#cat("\n\nKNN imputation:")
+#sil_knn <- calculate_silhouette(X_knn, cdpc_results$knn)
+#cat("\nScore:", sil_knn)
 
 cat("\n\nEM imputation:")
 sil_em <- calculate_silhouette(X_em_expectation_maximization, cdpc_results$em_expectation_maximization)
@@ -260,8 +261,8 @@ cat("\nScore:", sil_filtered)
 
 # Create summary dataframe
 silhouette_scores <- data.frame(
-  Method = c("Original", "Mean", "Median", "KNN", "EM", "Filtered"),
-  Score = c(sil_original, sil_mean, sil_median, sil_knn, sil_em, sil_filtered)
+  Method = c("Original", "Mean", "Median",  "EM", "Filtered"),
+  Score = c(sil_original, sil_mean, sil_median, sil_em, sil_filtered)
 )
 
 # Create visualization

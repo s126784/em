@@ -37,16 +37,6 @@ CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), m
   #  pseudocm: pseudo confusion matrix of the real and cdpca classifications
   #  Enorm: error norm for the obtained cdpca model
   
-  library(progress)
-  
-  # Initialize progress bar
-  pb <- progress_bar$new(
-    format = "CDpca Iterations [:bar] :current/:total (:percent) :eta",
-    total = maxit,  # Total number of iterations
-    clear = FALSE, 
-    width = 60
-  )
-  
   #CDPCA is applied on normalized data (mean zero and unit variance)
   
   #############################################
@@ -128,9 +118,11 @@ CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), m
   # matriz X (I x J) (obs x vars), numeric matrix argument
   tfbest <- matrix(0, r, 1)  # computational time at each loop
   
+  print("foo")
   
   # Run CDPCA ALS algorithm r times
   for (loop in 1:r) {
+    print("too")
     t1 <- proc.time()
     # Initialization
     iter <- 0
@@ -173,6 +165,8 @@ CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), m
       }  # end if
     }  # end for
     
+    print("afterfor")
+    
     A0 <- A
     Y.bar <- X.bar%*%A  				# (PxQ) object centroid matrix. It identifies the P centroids in the reduced space of the Q principal components.
     F0 <- sum(diag(t(U%*%Y.bar)%*%U%*%Y.bar))   # Objective function to maximize.
@@ -180,13 +174,15 @@ CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), m
     conv <- 2*tol
     while (conv > tol) {
       
+      cat("insidewhile", conv, tol)
+      
       iter <- iter+1
       Y <- Xs%*%A 					 # (IxQ) component score matrix. It identifies the I objects in the reduced space of the Q principal components.
       U <- matrix(0, I, P)
       # update U
-      for (i in 1:I) {	
+      for (i in 1:I) {
         dist <- rep(0, P)
-        for (p in 1:P) {	
+        for (p in 1:P) {
           dist[p] <- sum((Y[i, ]-Y.bar[p, ])^2)
         } # end for	
         min.dist <- which.min(dist)
@@ -210,8 +206,13 @@ CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), m
       Y.bar <- X.bar%*%A
       X.group <- U%*%X.bar
       
+      cat('J=', J,'\n')
+      
       # Update V and A
       for (j in 1:J) {
+        #if (j %% 20 == 0) {
+        #  cat('j/J', j, J,'\n')
+        #}
         posmax <- which(V[j, ] == 1)
         for (g in 1:Q) {
           V[j, ] <- diag(Q)[g, ]
@@ -270,7 +271,6 @@ CDpca <- function(data, class = NULL,  P, Q, SDPinitial = FALSE,  tol=10^(-5), m
         break
       }  # end if
       
-      pb$tick()
     }  # end while
     
     # Computation time for each loop
