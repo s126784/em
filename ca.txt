@@ -1,0 +1,592 @@
+# 1.1
+x <- as.matrix(iris[,1:4])
+str(x)
+
+y = x %*% c(1,0,1,0)
+y
+
+z = x %*% t(matrix(c(1,0,1,0,0,1,0,1), nrow=2, byrow=TRUE))
+z
+
+cor(z)
+#----
+
+
+# Coordenadas (x, y) dos indivíduos
+dados <- data.frame(
+  x = c(5, 6, 15, 16, 25, 30),
+  y = c(5, 6, 14, 15, 20, 19)
+)
+
+distancias <- as.matrix(dist(dados))
+distancias
+
+A <- c(1,2)
+B <- c(3,4)
+
+sb <- distancias[A,B]
+sb
+
+min(sb)
+max(sb)
+mean(sb)
+
+centroide_A = colMeans(dados[A,])
+centroide_B = colMeans(dados[B,])
+dist_centroide <- sqrt(sum((centroide_A-centroide_B)^2))
+dist_centroide
+
+#--------
+
+data <- as.data.frame(iris[,1:4])
+dist_matrix <- dist(data)
+dist_matrix
+hclust_iris = hclust(dist_matrix)
+plot(hclust_iris)
+
+clusters_hierarchical <- cutree(hclust_iris, k = 3)
+table(clusters_hierarchical)
+
+km <- kmeans(data, centers=3)
+table(km$cluster)
+library(cluster)
+silhouette_hierarchical <- silhouette(clusters_hierarchical, dist_matrix)
+silhouette_kmeans <- silhouette(km$cluster, dist_matrix)
+
+# Plotando os gráficos de silhueta
+par(mfrow = c(1, 2))
+plot(silhouette_hierarchical, main = "Silhueta - Método Hierárquico")
+plot(silhouette_kmeans, main = "Silhueta - K-médias")
+
+# Comentário sobre os resultados pode ser feito observando os gráficos gerados
+
+# 3. Agrupamento de variáveis usando correlação de Pearson e vizinho mais afastado
+# Calculando a matriz de correlações entre as variáveis
+correlation_matrix <- cor(data, method = "pearson")
+correlation_matrix
+# Convertendo a matriz de correlação em distâncias (1 - correlação)
+dist_variables <- as.dist(1 - correlation_matrix)
+
+# Realizando a análise hierárquica de agrupamento das variáveis
+hclust_variables <- hclust(dist_variables, method = "complete")
+
+# Plotando o dendrograma das variáveis
+plot(hclust_variables, main = "Dendrograma das Variáveis (Correlação de Pearson)", xlab = "", sub = "")
+
+
+# 3.1
+
+data <- matrix(c(0,0,0.6,0.4,0.4,0.6,1,1), ncol=2, byrow = TRUE)
+data
+
+m = colMeans(data)
+m
+
+sc = var(data)
+sc
+eigen(sc)
+
+Um = matrix(rep(1,4), nrow=4)
+v1 = eigen(sc)$vectors[,1]
+v1
+y = (data - Um %*% m) %*% v1
+y
+
+z_a = Um %*% m
+z_a
+z_b = y %*% t(v1)
+z_b
+z = z_a + z_b
+z
+plot(x, pch=19, col="blue")
+points(z, pch=2, col="red")
+
+y1 = prcomp(data - Um %*% m)
+y1$x
+z1 = y1$x[,1] %*% t(y1$rotation[,1]) + m
+z1
+
+y2 = princomp(data - Um %*% m )
+y2$scores
+z2 = y2$scores[,1] %*% t(y2$loadings[,1]) + m
+z2
+
+# 3.2 
+
+library(RColorBrewer)
+facedata = as.matrix(read.table("~/faceData.txt", sep="", header=TRUE))
+par(mfrow=c(1,3))
+image(facedata)
+image(t(facedata[32:1,]))
+image(t(facedata[32:1,]), xaxt = "none", yaxt = "none", col = rev(colorRampPalette(brewer.pal(7, "Blues"))(100)))
+
+pca = princomp(facedata)
+summary(pca)
+loadings = pca$loadings[,1:5]
+
+scores = pca$scores[,1:5]
+
+par(mfrow=c(1,3))
+image(t(facedata[32:1,]), xaxt = "none", yaxt = "none", col = rev(colorRampPalette(brewer.pal(7, "Blues"))(100)))
+image(t(scores[32:1,]), xaxt = "none", yaxt = "none", col = rev(colorRampPalette(brewer.pal(7, "Blues"))(100)))
+
+reconstruction = scores %*% t(loadings) + colMeans(facedata)
+image(t(reconstruction[32:1,]), xaxt = "none", yaxt = "none", col = rev(colorRampPalette(brewer.pal(7, "Blues"))(100)))
+
+#3.3
+library(readxl)
+library(ggplot2)
+data = read_excel("~/SimpleData.xls")
+data
+
+plot(data)
+
+cov_matrix = cov(data)
+cov_matrix
+
+pca = prcomp(data)
+pca
+plot(pca$x, col="red")
+
+var(data)
+sum(diag(var(data)))
+
+cor(data)
+
+cor(pca$x)
+
+plot(scale(data))
+
+cor_matrix <- cor(data)
+cor_matrix
+
+var_original = sum(diag(cov_matrix))
+pca$sdev
+
+cor_X1X2 = cor(data)[1,2]
+cor_X1X2
+cor_PC1PC2 = cor(pca$x)[1,2]
+cor_PC1PC2
+
+
+X_std = scale(data)
+pca_std = prcomp(X_std)
+pca_std
+
+plot(X_std)
+plot(pca_std$x)
+
+#3.4
+data = read.table("~/FoodPriceUSA.txt", sep=";", dec=",", header=TRUE)
+data <- data[,-1]
+data
+
+m = colMeans(data)
+m
+
+sqrt(diag(var(data)))
+
+pca = prcomp(data, scale=TRUE)
+pca
+
+
+plot(pca$x[,1], pca$x[,2])
+
+cor(scale(data), pca$x)
+biplot(pca, choices=1:2)
+
+#3.5
+#ficheiro=loadWorkbook("datasetI.xlsx")
+dadosI = read_excel("~/datasetI.xlsx","datasetI")
+dadosI
+
+str(dadosI)
+dados=dadosI[,-c(1,17)]
+str(dados)
+pca=prcomp(dados,scale=T)
+summary(pca)
+loading=cor(pca$x,dados); round(loading,3)
+x=abs(loading); x
+a=NULL
+for (i in 1:(dim(dados)[2]))
+  a[i]=colnames(x)[which.max(x[i,])]
+a=rbind(rownames(loading),a); a
+
+#Object a is a matrix with 2 rows that shows the relationship between Principal Components (PCs) and variables with the strongest correlations. Here's what each row contains:
+#First row: PC1 through PC15 (Principal Components)
+#Second row: The variable names that have the highest absolute correlation with each corresponding PC
+#For example:
+#PC1 has strongest correlation with PMe (metal electronegativity)
+#PC2 has strongest correlation with Cn (normalized concentration)
+#PC3 has strongest correlation with NMe (number of metals)
+
+#3.6
+library(dplyr)
+data = read.table("~/FoodWesternEurope.txt", sep=";", dec=",", header=TRUE, row.names=1)
+data <- data[,-1]
+data
+
+pca = prcomp(data, scale=TRUE)
+pca
+
+# 2. Get percentage of variance explained by first 3 PCs
+summary(pca)
+
+#4.1
+v1 <- c(9.3, 7.1, 6.3, 5.0, 4.2, 3.1, 2.3, 1.2, 0.8, 0.7, 0.7, 0.6, 0.5, 0.5, 0.4)
+factors <- 1:length(v1)
+plot(factors,v1,type="b", pch=19)
+abline(h = 1, col = "red", lty = 2)
+
+#4.2
+# Create the loadings matrix
+loadings <- matrix(c(
+  0.684, 0.303, 0.520, 0.143,  # A1
+  0.883, 0.170, 0.302, 0.067,  # A3
+  0.615, 0.626, 0.102, 0.094,  # R1
+  0.830, 0.380, 0.113, 0.167,  # R3
+  0.332, 0.769, 0.330, 0.126,  # T1
+  0.356, 0.590, 0.356, 0.280,  # T3
+  0.247, 0.860, 0.142, 0.044,  # U1
+  0.031, 0.517, 0.639, 0.061,  # U3
+  0.134, -0.042, 0.220, 0.868,  # A
+  0.379, 0.396, 0.646, 0.269,  # D
+  0.308, 0.093, 0.870, 0.153,  # E
+  0.075, 0.247, 0.043, 0.874   # P
+), ncol=4, byrow=TRUE)
+
+rownames(loadings) <- c("A1", "A3", "R1", "R3", "T1", "T3", "U1", "U3", "A", "D", "E", "P")
+colnames(loadings) <- c("F1", "F2", "F3", "F4")
+
+#  Factor model for A1
+# A1 = 0.684*F1 + 0.303*F2 + 0.520*F3 + 0.143*F4 + e1
+
+#  Calculate communalities
+communalities <- rowSums(loadings^2)
+communalities
+
+#  Calculate variance explained by each factor
+var_explained <- colSums(loadings^2)
+var_explained
+total_var <- sum(var_explained)
+total_var
+prop_var <- var_explained / nrow(loadings)
+prop_var
+cum_var <- cumsum(prop_var)
+cum_var
+
+#  Identify significant loadings (typically |loading| > 0.5)
+significant_loadings <- abs(loadings) > 0.5
+print("Significant loadings (>0.5):")
+print(significant_loadings)
+
+#4.3
+library(haven)
+data <- read_spss("~/wiscsem.sav")
+wisc_items <- as.data.frame(data[, -(1:2)])
+wisc_items
+
+n_missing <- colSums(is.na(wisc_items))
+percent_missing <- (n_missing / nrow(wisc_items)) * 100
+missing_df <- data.frame(
+  Variable = names(wisc_items),
+  Missing_Count = n_missing,
+  Percent_Missing = percent_missing
+)
+missing_df
+
+stats <- data.frame(
+  Mean = colMeans(wisc_items, na.rm = TRUE),
+  SD = apply(wisc_items, 2, sd, na.rm = TRUE),
+  Min = apply(wisc_items, 2, min, na.rm = TRUE),
+  Max = apply(wisc_items, 2, max, na.rm = TRUE),
+  Skewness = apply(wisc_items, 2, function(x) psych::skew(x, na.rm = TRUE)),
+  Kurtosis = apply(wisc_items, 2, function(x) psych::kurtosi(x, na.rm = TRUE))
+)
+stats
+
+#4.4
+
+R <- matrix(c(
+  1.00, 0.40, 0.40, 0.30, 0.31, 0.34, 0.34,
+  0.40, 1.00, 0.62, 0.15, 0.14, 0.21, 0.18,
+  0.40, 0.62, 1.00, 0.32, 0.29, 0.36, 0.35,
+  0.30, 0.15, 0.32, 1.00, 0.85, 0.76, 0.66,
+  0.31, 0.14, 0.29, 0.85, 1.00, 0.80, 0.80,
+  0.34, 0.21, 0.36, 0.76, 0.80, 1.00, 0.74,
+  0.34, 0.18, 0.35, 0.66, 0.80, 0.74, 1.00
+), nrow=7, byrow=TRUE)
+R
+eigen = eigen(R)$values
+eigen
+
+var_explained = eigen/sum(eigen) * 100
+var_explained
+
+cumvar <- cumsum(var_explained)
+cumvar
+
+e <- eigen(R)
+v <- e$vectors[1:2] #only 2
+d <- sqrt(e$values[1:2])#only 2
+loadings = v %*% diag(d);
+loadings
+
+comunalities <- rowSums(loadings^2)
+communalities
+
+u2 <- 1 - communalities
+u2
+
+#4.5
+data <- read_excel("~/AthleticRecordsData.xlsx")
+data <- data[,-1]
+data
+
+pca <- prcomp(data, scale = FALSE)
+pca
+
+pc2 <- pca$rotation[,2]
+pc2
+round(pc2, 2)
+
+correlations <- cor(data, pca$x[,1])
+correlations
+min_cor <- which.min(abs(correlations))
+print(paste("Variable least correlated with PC1:", names(data)[min_cor]))
+print(paste("Correlation value:", round(correlations[min_cor], 4)))
+
+pca_norm = prcomp(data, scale = TRUE)
+# Calculate variance explained by each component
+var_explained <- pca_norm$sdev^2 / sum(pca_norm$sdev^2) * 100
+
+# Create biplot with variance percentages
+biplot(pca_norm, 
+       xlab = paste0("PC1 (", round(var_explained[1], 1), "%)"),
+       ylab = paste0("PC2 (", round(var_explained[2], 1), "%)"),
+       cex = 0.7)
+
+dist_matrix = dist(scale(data))
+dist_matrix
+
+hc <- hclust(dist_matrix)
+plot(hc,hang=-1, cex=0.6)
+
+clusters <- cutree(hc, k=2)
+clusters
+
+get_orig_obs <- function(node, merge_mat) {
+  if(node < 0) return(-node)  # Original observation
+  return(c(get_orig_obs(merge_mat[node,1], merge_mat),
+           get_orig_obs(merge_mat[node,2], merge_mat)))
+}
+
+# Get countries merged in 5th step
+countries_5th <- get_orig_obs(5, hc$merge)
+countries_5th
+
+# e) Bimax clustering for outlier detection
+normalized_data <- scale(data)
+outliers <- which(normalized_data > 1, arr.ind = TRUE)
+# Group by country and event
+outlier_groups <- split(outliers[,1], outliers[,2])
+print("Biclusters of high values:")
+print(outlier_groups)
+
+#4.6
+
+data <- mtcars
+data
+
+pca = prcomp(data, scale=TRUE)
+pca
+
+round(pca$x, 3)
+
+cr = cor(data, pca$x)
+
+r1 <- max(cr)
+r1
+
+biplot(pca,scale=0.1)
+
+# Focus on Mercedes models
+mercedes_models <- rownames(mtcars)[grep("Merc", rownames(mtcars))]
+points(pca$x[mercedes_models, 1:2], col = "red", pch = 16)
+text(pca$x[mercedes_models, 1:2], labels = mercedes_models, pos = 3, col = "red")
+
+dist_matrix = dist(scale(data))
+dist_matrix
+
+hc <- hclust(dist_matrix, method="average")
+plot(hc, hang=-1)
+
+rect.hclust(hc, k = 4)
+
+#4.7
+
+iris_numeric <- iris[, 1:4]  # Select only numeric columns
+iris_numeric
+
+pca = prcomp(iris_numeric, scale=TRUE)
+pca
+summary(pca)
+
+# Print first principal component coefficients (rounded to 2 decimal places)
+cat("First Principal Component:\n")
+round(pca$rotation[,1], 2)
+
+pc_cors <- cor(iris_numeric, pca$x)
+ordered_cors <- sort(abs(pc_cors[,1]), decreasing = TRUE)
+ordered_cors
+top_2_vars <- ordered_cors[1:2]
+top_2_vars
+
+biplot(pca)
+var_explained = sum(summary(pca)$importance[3,])
+var_explained
+
+flowers_of_interest <- iris_numeric[c(16,61), c("Petal.Length", "Petal.Width")]
+flowers_of_interest
+
+distances = dist(iris_numeric)
+hc <- hclust(distances, method="single")
+plot(hc, hang=-1)
+
+clusters <- cutree(hc, k=2)
+clusters
+
+virginica_clusters <- table(iris$Species == "virginica", clusters)
+virginica_clusters
+
+# (f) Factor Analysis using principal() from stats package
+# With rotation
+fa_varimax <- princomp(iris_numeric, cor = TRUE)
+loadings_varimax <- varimax(fa_varimax$loadings[,1:2])
+print("Factor Analysis with Varimax rotation:")
+print(loadings_varimax$loadings)
+
+# Without rotation
+print("Factor Analysis without rotation:")
+print(fa_varimax$loadings[,1:2])
+
+# Calculate communalities
+communalities <- rowSums(loadings_varimax$loadings^2)
+print("Communalities:")
+print(communalities)
+
+#4.8
+data = read.csv("~/Contamination.txt", sep=";", dec=",", header=TRUE)
+data
+
+KMO(data)
+scaled_data <- scale(data)
+
+m2 = princomp(scaled_data, cor=TRUE)
+m2
+loadings_m2 <- m2$loadings[,1:2]
+loadings_m2
+communalities_m2 = rowSums(loadings_m2^2)
+communalities_m2
+
+M2 = factanal(scaled_data, factors=2, rotation="none")
+M2
+loadings_M2 <- M2$loadings[,1:2]
+loadings_M2
+communalities_M2 = rowSums(loadings_M2^2)
+communalities_M2
+
+ni_loadings = loadings_m2["Ni",]
+ni_loadings
+cat("\nEquation for Ni in m2:\n")
+cat("Ni =", round(ni_loadings[1], 3), "* Factor1 +", 
+    round(ni_loadings[2], 3), "* Factor2")
+
+# Check communality for PAHs
+pahs_comm <- communalities_m2["PAHs"]
+print("\nCommunality for PAHs:")
+print(pahs_comm)
+
+biplot(prcomp(scaled_data))
+
+
+# 4.9
+vars <- c("Ni", "Cd", "Mn", "Cr", "Fe")
+soil_data = data[,vars]
+soil_data
+
+summary(soil_data)
+apply(soil_data, 2, sd)
+
+pca_norm = prcomp(soil_data, scale=TRUE)
+# Create scatter plot of first two PCs with specific samples highlighted
+plot(pca_norm$x[,1], pca_norm$x[,2], 
+     xlab="PC1", ylab="PC2",
+     main="PCA plot of soil samples",
+     pch=16, col="gray")
+
+# Highlight samples 15, 24, and 25
+points(pca_norm$x[c(15,24,25),1], pca_norm$x[c(15,24,25),2], 
+       col="red", pch=16)
+text(pca_norm$x[c(15,24,25),1], pca_norm$x[c(15,24,25),2], 
+     labels=c(15,24,25), pos=3)
+
+distances = dist(soil_data)
+hc <- hclust(distances, method="complete")
+plot(hc)
+
+groups = cutree(hc, k=2)
+groups
+
+merge_height <- hc$height[which(hc$merge == 10 | hc$merge == -10)[1]]
+print(paste("Sample 10 was added at height:", round(merge_height, 3)))
+
+
+distances_original = dist(data)
+hc_original <- hclust(distances_original, method="complete")
+plot(hc_original)
+
+groups_original = cutree(hc_original, k=2)
+groups_original
+
+contingency <- table(groups, groups_original)
+print("Contingency table of clusterings:")
+print(contingency)
+
+# Find samples in different clusters
+different_clusters <- which(groups != groups_original)
+print("Samples in different clusters:")
+print(different_clusters)
+
+
+## бикластеры
+
+library(biclust)
+
+# Загрузим данные
+data(mtcars)
+
+# Посмотрим на первые строки данных
+head(mtcars)
+
+# Создадим бинарную матрицу
+# Преобразуем значения в 1, если они выше среднего, и 0 если ниже
+binary_mtcars <- apply(mtcars, 2, function(x) as.numeric(x > mean(x)))
+
+# Посмотрим на полученную бинарную матрицу
+print("Бинарная матрица (первые 5 строк):")
+print(head(binary_mtcars, 5))
+
+# Применим Bimax алгоритм
+result <- biclust(binary_mtcars, method=BCBimax(), 
+                  minr=3,    # минимум 3 машины
+                  minc=2,    # минимум 2 характеристики
+                  number=5)  # максимум 5 бикластеров
+
+# Выведем результаты
+print("\nНайденные бикластеры:")
+print(result)
+
+# Подробная информация о первом бикластере
+print("\nПервый бикластер:")
+bicluster(binary_mtcars, result, number=1)

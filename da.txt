@@ -1,0 +1,938 @@
+# 1.1  Given data:
+# E(X₁) = E(X₂) = 2, Var(X₁) = 1, Var(X₂) = 5, E(X₁X₂) = 2
+
+# 1. E(a - X), where a = [1 0]'
+E_a_minus_X <- c(1, 0) - c(2, 2)
+print("E(a - X):")
+print(E_a_minus_X)
+
+# 2. Covariance matrix
+Sigma_X <- matrix(c(1, -2, 
+                    -2, 5), 2, 2)
+print("Covariance matrix:")
+print(Sigma_X)
+print("Is positive definite:", all(eigen(Sigma_X)$values > 0))
+
+# 3. Var(2 - b'X), where b = [2 -1]'
+b <- c(2, -1)
+var_bX <- t(b) %*% Sigma_X %*% b
+print("Var(2 - b'X):")
+print(var_bX)
+
+# 4. For Z = [X₁, X₁-X₂, X₂]'
+# E(Z)
+E_Z <- c(2, 0, 2)
+print("E(Z):")
+print(E_Z)
+
+# Cov(Z)
+A <- matrix(c(1,0, 1,-1, 0,1), 3, 2, byrow=TRUE)
+Sigma_Z <- A %*% Sigma_X %*% t(A)
+print("Cov(Z):")
+print(Sigma_Z)
+
+#1.2
+# X = [X₁ X₂ X₃]'
+# 
+
+# 1) Для диагональных элементов (дисперсии):
+# - Var(X₁) = 11
+# - Var(X₃) = 6 (получаем из Var(3X₃) = 54, так как Var(3X₃) = 9Var(X₃))
+# - Var(X₂) = 10 (это вычисляется: из Var(X₂ + X₃) = 8 и Var(X₂) + Var(X₃) + 2Cov(X₂,X₃) = 8)
+# 
+# 2) Для недиагональных элементов (ковариации):
+# - Cov(X₁,X₂) = E(X₁X₂) - E(X₁)E(X₂) = -4 - (2×1) = -6
+# - Cov(X₁,X₃) = 2 (из Cov(X₃,2X₁) = 4)
+# - Cov(X₂,X₃) = -4 (из Cov(X₁ + X₂,X₃) = -2 и Cov(X₁,X₃) + Cov(X₂,X₃) = -2)
+
+# 1. Construct covariance matrix directly with known values
+Sigma_X <- matrix(c(11, -6,  2,
+                    -6, 10, -4,
+                    2, -4,  6), 3, 3)
+
+print("1. Covariance matrix:")
+print(Sigma_X)
+
+# 2. Calculate E(a'X) where a = (1,2,3)'
+E_X <- c(2, 1, 3)
+a <- c(1, 2, 3)
+E_aX <- sum(a * E_X)
+print("2. E(a'X):", E_aX)
+
+# 3. Calculate Var(3X)
+Var_3X <- 9 * Sigma_X
+print("3. Var(3X):")
+print(Var_3X)
+
+# 4a. For Z = (X₁ + X₂ + X₃)/3
+E_Z_a <- mean(E_X)
+a <- rep(1/3, 3)
+Var_Z_a <- t(a) %*% Sigma_X %*% a
+print("4a. E(Z):", E_Z_a)
+print("Var(Z):", Var_Z_a)
+
+# 4b. For Z = [X₁ - X₂; X₂ - X₃]
+E_Z_b <- c(E_X[1] - E_X[2], E_X[2] - E_X[3])
+A <- matrix(c(1,-1,0, 0,1,-1), 2, 3, byrow=TRUE)
+Var_Z_b <- A %*% Sigma_X %*% t(A)
+
+print("4b. E(Z):")
+print(E_Z_b)
+print("Cov(Z):")
+print(Var_Z_b)
+
+#1.3
+Sigma <- matrix(c(25, -2, 4,
+                  -2,  4, 1,
+                  4,  1, 9), nrow = 3, byrow = TRUE)
+Sigma
+sd <- sqrt(diag(Sigma))
+sd
+Sigma / (sd %o% sd)
+
+
+# 2. Корреляция между X₁ и (1/2)X₂ + (1/2)X₃
+# Используем формулу ρ(X₁,aX₂+bX₃) = (aσ₁₂ + bσ₁₃)/sqrt(σ₁₁(a²σ₂₂ + b²σ₃₃ + 2abσ₂₃))
+a <- b <- 1/2
+num <- a*Sigma[1,2] + b*Sigma[1,3]
+den <- sqrt(Sigma[1,1] * (a^2*Sigma[2,2] + b^2*Sigma[3,3] + 2*a*b*Sigma[2,3]))
+corr <- num/den
+print("2. Корреляция между X₁ и (1/2)X₂ + (1/2)X₃:")
+print(corr)
+
+# 3. Вариация линейной комбинации 3X₁ - X₂ + 2X₃
+# Используем формулу Var(aᵀX) = aᵀΣa
+a <- c(3, -1, 2)
+var_lin_comb <- t(a) %*% Sigma %*% a
+print("3. Вариация 3X₁ - X₂ + 2X₃:")
+print(var_lin_comb)
+
+# 4. Матрица ковариаций для Z = [X₁-X₂, X₁+X₂]
+# Используем матрицу преобразования A такую, что Z = AX
+A <- matrix(c(1, -1, 0,
+              1,  1, 0), 2, 3, byrow=TRUE)
+Sigma_Z <- A %*% Sigma %*% t(A)
+print("4. Матрица ковариаций Z:")
+print(Sigma_Z)
+
+#1.4
+# Задаем параметры многомерного нормального распределения
+mu <- c(0, 0, 0)  # вектор средних
+rho <- 0.5  # предположим, что ρ = 0.5 для примера
+
+# Создаем ковариационную матрицу
+Sigma <- matrix(c(1,   rho, rho,
+                  rho, 1,   rho,
+                  rho, rho, 1), 3, 3)
+
+# 1. Маргинальные распределения
+# В многомерном нормальном распределении маргинальные распределения тоже нормальные
+# с соответствующими параметрами из μ и диагональными элементами Σ
+marginal_means <- mu
+marginal_vars <- diag(Sigma)
+
+print("1. Маргинальные распределения:")
+for(i in 1:3) {
+  cat(sprintf("X%d ~ N(%f, %f)\n", i, marginal_means[i], marginal_vars[i]))
+}
+
+# 2. Распределение cX
+# Для матрицы c размера 2×3
+c <- matrix(c(1, 0, -1,
+              1, -2, 1), 2, 3, byrow=TRUE)
+
+# E(cX) = cμ
+mean_cX <- c %*% mu
+
+# Var(cX) = cΣc'
+var_cX <- c %*% Sigma %*% t(c)
+
+print("\n2. Распределение cX:")
+print("E(cX):")
+print(mean_cX)
+print("Var(cX):")
+print(var_cX)
+
+# 3. Распределение (X - μ)'Σ⁻¹(X - μ)
+# Это выражение имеет распределение χ² с 3 степенями свободы
+# Рассчитаем Σ⁻¹ для иллюстрации
+Sigma_inv <- solve(Sigma)
+
+print("\n3. (X - μ)'Σ⁻¹(X - μ) ~ χ²(3)")
+print("Σ⁻¹:")
+print(Sigma_inv)
+
+#1.5
+n <- 10000  # количество точек для симуляции
+
+# Генерируем X₁ ~ N(0,1)
+X1 <- rnorm(n, mean=0, sd=1)
+
+# Создаем X₂ согласно условию
+X2 <- ifelse(X1 >= -1 & X1 <= 1, -X1, X1)
+
+# 1. Проверка, что X₂ ~ N(0,1)
+print("1. Проверка распределения X₂:")
+print(paste("Среднее X₂:", mean(X2)))
+print(paste("Дисперсия X₂:", var(X2)))
+print(paste("Тест Шапиро-Уилка для X₂:"))
+print(shapiro.test(X2[1:5000]))  # берем подвыборку из-за ограничений теста
+
+# 2. Проверка двумерной нормальности
+# Создаем график разброса
+plot(X1, X2, pch='.', 
+     main="Диаграмма рассеяния (X₁,X₂)",
+     xlab="X₁", ylab="X₂")
+
+# Рассчитаем корреляцию
+cor_x1x2 <- cor(X1, X2)
+print(paste("Корреляция между X₁ и X₂:", cor_x1x2))
+
+# 3. Это уже доказано самим примером
+print("3. Утверждение ложно, так как:")
+print("- X₁ и X₂ маргинально нормальны")
+print("- Но (X₁,X₂) не имеет совместного нормального распределения")
+
+#1.6
+# 1. Сначала создадим матрицу преобразования A такую, что [V₁,V₂]' = AX
+
+A <- matrix(c(1/4, -1/4,  1/4, -1/4,   # коэффициенты для V₁
+              1/4,  1/4, -1/4, -1/4),    # коэффициенты для V₂
+            nrow = 2, byrow = TRUE)
+
+print("Матрица преобразования A:")
+print(A)
+
+# Предположим для примера, что X ~ N(μ,Σ)
+mu_X <- c(1, 2, 3, 4)  # произвольный вектор средних
+# Поскольку X₁,...,X₄ независимы, Σ диагональная
+Sigma_X <- diag(4)     # единичная матрица 4x4
+
+# Для линейного преобразования нормального распределения:
+# 1. E(V) = AE(X)
+mu_V <- A %*% mu_X
+print("\nВектор средних V:")
+print(mu_V)
+
+# 2. Var(V) = AΣA'
+# Поскольку X₁,...,X₄ независимы и одинаково распределены,
+# Σ = I (единичная матрица)
+Sigma_V <- A %*% Sigma_X %*% t(A)
+print("\nКовариационная матрица V:")
+print(Sigma_V)
+
+# Итоговое распределение
+print("\nРаспределение [V₁,V₂]:")
+print("Двумерное нормальное распределение с:")
+print(paste("μ₁ =", mu_V[1]))
+print(paste("μ₂ =", mu_V[2]))
+print("и ковариационной матрицей Σ:")
+print(Sigma_V)
+
+
+#1.8
+mu <- c(-3, 1, 4)
+Sigma <- matrix(c(1, -2, 0,
+                  -2, 5, 0,
+                  0, 0, 2), 3, 3)
+
+# Проверка независимости:
+# Две случайные величины независимы тогда и только тогда, 
+# когда их ковариация равна 0
+
+# 1. X₁ и X₂
+print("1. X₁ и X₂ независимы?")
+print(Sigma[1,2] == 0)  # False, ковариация = -2
+
+# 2. X₂ и X₃
+print("2. X₂ и X₃ независимы?")
+print(Sigma[2,3] == 0)  # True, ковариация = 0
+
+# 3. (X₁,X₂) и X₃
+# Проверяем ковариации X₁ с X₃ и X₂ с X₃
+print("3. (X₁,X₂) и X₃ независимы?")
+print(all(Sigma[1:2,3] == 0))  # True
+
+# 4. (X₁+X₂)/2 и X₃
+# Ковариация линейной комбинации:
+a <- c(1/2, 1/2, 0)
+cov_sum_X3 <- t(a) %*% Sigma %*% c(0,0,1)
+print("4. (X₁+X₂)/2 и X₃ независимы?")
+print(cov_sum_X3 == 0)  # True
+
+
+# 1.9 Доказательство:
+# 1. По определению, если X₁ и X₂ независимы, то
+#    Cov(X₁,X₂) = 0
+
+# 2. В блочной матрице Σ, блок Σ₁₂ представляет собой
+#    матрицу ковариаций между X₁ и X₂
+
+# 3. Следовательно:
+#    X₁ и X₂ независимы ⟺ Cov(X₁,X₂) = 0 ⟺ Σ₁₂ = 0
+
+# 4. Это означает, что если X₁ и X₂ независимы, то Σ₁₂ = 0
+#    И наоборот, если Σ₁₂ = 0, то X₁ и X₂ независимы
+
+# В R мы можем это проверить на примере:
+Sigma_example <- matrix(c(1,0,0,1), 2, 2)
+print("Пример независимых величин (Σ₁₂ = 0):")
+print(Sigma_example)
+
+
+#1.12
+# Данные
+X <- matrix(c(3,6, 4,4, 5,7, 4,7), ncol=2, byrow=TRUE)
+
+# 2. Оценки максимального правдоподобия
+# Выборочное среднее
+mu_hat <- colMeans(X)
+
+# Выборочная ковариационная матрица
+n <- nrow(X)
+Sigma_hat <- (t(X) %*% X - n * (mu_hat %*% t(mu_hat))) / (n-1)
+
+print("Оценка MLE для μ:")
+print(mu_hat)
+print("Оценка MLE для Σ:")
+print(Sigma_hat)
+
+#1.14
+# 1. Для TLC (Центральной Предельной Теоремы) многомерного случая:
+
+# Сначала найдем теоретическое математическое ожидание
+x_values <- c(0, 0, 1, 1)
+y_values <- c(0, 1, 0, 1)
+probs <- rep(1/4, 4)
+
+mu_x <- sum(x_values * probs)  # = 0.5
+mu_y <- sum(y_values * probs)  # = 0.5
+mu <- c(mu_x, mu_y)
+
+# Теоретическая ковариационная матрица
+Sigma <- matrix(c(
+  sum((x_values - mu_x)^2 * probs),                       # Var(X)
+  sum((x_values - mu_x)*(y_values - mu_y) * probs),       # Cov(X,Y)
+  sum((x_values - mu_x)*(y_values - mu_y) * probs),       # Cov(X,Y)
+  sum((y_values - mu_y)^2 * probs)                        # Var(Y)
+), 2, 2)
+
+# 2. Визуализация предельного распределения
+library(MASS)
+library(mvtnorm)
+
+# Создаем сетку точек
+x <- seq(-1, 2, length=100)
+y <- seq(-1, 2, length=100)
+grid <- expand.grid(x=x, y=y)
+
+# Вычисляем плотность нормального распределения в каждой точке
+z <- matrix(dmvnorm(cbind(grid$x, grid$y), 
+                    mean=mu/sqrt(n), 
+                    sigma=Sigma/n), 
+            nrow=100)
+
+# Строим график
+contour(x, y, z, 
+        xlab="X", ylab="Y",
+        main="Предельная плотность вероятности")
+
+
+# 3. Для квадратичной формы g(x̄) = x̄'Ax̄
+# По свойствам многомерного нормального распределения:
+# g(x̄) асимптотически следует распределению
+# суммы взвешенных хи-квадрат распределений
+
+#1.15
+D <- matrix(c(0, -1, 1, 3), nrow=2)
+Sigma = matrix(c(1,1/2,1/2,1),nrow=2)
+res = D %*% Sigma %*% t(D)
+res
+
+#1.16
+x = t(matrix(c(2,8,6,8,12,9,9,10),nrow=2,byrow=TRUE))
+x
+
+# Ковариационная матрица
+sc <- cov(t(x))
+print(sc)
+
+S <- matrix(c(8,-10/3,-10/3,2),nrow=2)
+S_inv = solve(S)
+S_inv
+
+# Данные
+n <- ncol(x)  # Размер выборки
+p <- nrow(x)  # Число переменных
+x_bar = rowMeans(x)  # вектор средних
+
+# Находим критическое значение для p=2 и α=0.05
+# Используем распределение F
+F_crit = qf(0.95, p, n-p)
+F_crit
+
+chi2_threshold <- qchisq(0.95, df = p)
+chi2_threshold
+
+# Предел эллипса
+ellipse_boundary <- chi2_threshold / n
+ellipse_boundary
+
+# Константа для эллипса
+c2 = (p*(n-1)/(n-p)) * F_crit
+c2
+
+
+
+print(paste("Пороговое значение для эллипса:", ellipse_boundary))
+
+#1.17
+# Given values
+n <- 42  # sample size
+sample_mean <- c(0.564, 0.603)  # sample mean vector
+mu0 <- c(7, 11)  # null hypothesized mean vector
+
+# Sample covariance matrix
+S <- matrix(c(0.0144, 0.0017,
+              0.0017, 0.0146), nrow=2)
+
+# Inverse of sample covariance matrix (S^-1)
+S_inv <- solve(S)
+
+# Calculate Hotelling's T² statistic
+# T² = n(x̄ - μ₀)ᵀS⁻¹(x̄ - μ₀)
+diff <- sample_mean - mu0
+T2 <- n * t(diff) %*% S_inv %*% diff
+
+# Calculate F statistic
+# F = (n-p)/((n-1)p) * T²
+p <- 2  # dimension
+
+#F_stat <- (n-p)/(((n-1)*p)) * T2
+
+# Critical value from F distribution (α = 0.01)
+F_crit <- qf(0.99, p, n-p)
+F_crit2 <- (n-1)*p*qf(0.99,p,n-p) / (n-p)
+
+# Print results
+cat("Hotelling's T² =", T2, "\n")
+# cat("F statistic =", F_stat, "\n")
+# cat("Critical F value (α = 0.01) =", F_crit, "\n")
+cat("Decision: ", ifelse(T2 > F_crit2, 
+                         "Reject H₀", "Fail to reject H₀"), "\n")
+
+#1.18
+# Given values
+n <- 87  # sample size
+x_bar <- c(527.74, 54.69, 25.13)  # sample mean vector
+p <- 3   # number of variables
+
+# Sample covariance matrix
+S <- matrix(c(5691.34, 600.51, 217.25,
+              600.51, 126.05, 23.34,
+              217.25, 23.34, 23.11), nrow=3, byrow=TRUE)
+
+# Inverse of sample covariance matrix (S^-1)
+S_inv <- solve(S)
+
+# 1. Roy's simultaneous confidence intervals
+alpha <- 0.05
+F_value <- qf(1-alpha, p, n-p)
+roy_const <- sqrt(p * F_value/(n-p))
+
+# Calculate standard errors for each mean
+std_errors <- sqrt(diag(S)/n)
+
+# Roy's intervals
+roy_intervals <- cbind(
+  x_bar - roy_const * std_errors,
+  x_bar + roy_const * std_errors
+)
+
+# For mean (μ1 + μ2 + μ3)/3
+# Need to calculate variance of the mean
+c_vector <- c(1/3, 1/3, 1/3)
+var_mean <- t(c_vector) %*% (S/n) %*% c_vector
+roy_mean_interval <- c(
+  sum(x_bar)/3 - roy_const * sqrt(as.numeric(var_mean)),
+  sum(x_bar)/3 + roy_const * sqrt(as.numeric(var_mean))
+)
+
+# 2. Bonferroni's simultaneous confidence intervals
+# For 4 intervals, we use alpha/4
+
+##
+m = 2
+a = c(1,0,0)
+alpha = 0.05
+CriticalBonf = qt(1 - alpha/(2*m), n-1)^2
+
+lowerLimB = t(a)%*%x_bar - sqrt(CriticalBonf * t(a) %*% S_inv %*% t(t(a))/n)
+upperLimB = t(a)%*%x_bar + sqrt(CriticalBonf * t(a) %*% S_inv %*% t(t(a))/n)
+
+t_value <- qt(1-alpha/(2*4), n-1)  # two-sided intervals, 4 comparisons
+
+bonf_intervals <- cbind(
+  x_bar - t_value * std_errors,
+  x_bar + t_value * std_errors
+)
+
+# Bonferroni interval for mean
+bonf_mean_interval <- c(
+  sum(x_bar)/3 - t_value * sqrt(as.numeric(var_mean)),
+  sum(x_bar)/3 + t_value * sqrt(as.numeric(var_mean))
+)
+
+# Print results
+cat("Roy's Simultaneous Intervals:\n")
+for(i in 1:3) {
+  cat(sprintf("μ%d: [%.2f, %.2f]\n", i, roy_intervals[i,1], roy_intervals[i,2]))
+}
+cat(sprintf("Mean: [%.2f, %.2f]\n\n", roy_mean_interval[1], roy_mean_interval[2]))
+
+cat("Bonferroni's Simultaneous Intervals:\n")
+for(i in 1:3) {
+  cat(sprintf("μ%d: [%.2f, %.2f]\n", i, bonf_intervals[i,1], bonf_intervals[i,2]))
+}
+cat(sprintf("Mean: [%.2f, %.2f]\n", bonf_mean_interval[1], bonf_mean_interval[2]))
+
+# 3. Compare interval widths
+roy_widths <- roy_intervals[,2] - roy_intervals[,1]
+bonf_widths <- bonf_intervals[,2] - bonf_intervals[,1]
+
+cat("\nInterval Widths Comparison:\n")
+for(i in 1:3) {
+  cat(sprintf("μ%d - Roy: %.2f, Bonferroni: %.2f\n", 
+              i, roy_widths[i], bonf_widths[i]))
+}
+
+# 4. 95% Confidence Region for μ
+# Critical value from chi-square distribution
+chi_crit <- qchisq(0.95, p)
+cat("\n95% Confidence Region for μ:\n")
+cat("The region is defined by the quadratic form:\n")
+cat("n(x - μ)'S^(-1)(x - μ) ≤", chi_crit)
+
+# 1.19
+
+# Dados do problema
+x_bar <- c(194.5, 136.9, 185.9)
+n <- 10
+
+Sc <- matrix(c(
+  187.6, 45.9, 113.6,
+  45.9, 69.2, 15.3,
+  113.6, 15.3, 239.9
+), nrow = 3, byrow = TRUE)
+
+Sc_inv <- solve(Sc)
+Sc_inv
+
+# 1. Intervalos de Roy
+alpha <- 0.05
+p <- 3
+v <- n - p
+F_value <- qf(1 - alpha, p, v)
+roy_const <- sqrt(p * F_value / v)
+roy_const
+# Matriz de variâncias das médias
+S_xbar <- Sc/n
+
+# Cálculo dos erros padrão
+se <- sqrt(diag(S_xbar))
+
+# Intervalos de Roy
+roy_margin <- roy_const * se
+roy_lower <- x_bar - roy_margin
+roy_upper <- x_bar + roy_margin
+
+# 2. Intervalos de Bonferroni
+t_value <- qt(1 - alpha/(2*p), v)
+bonf_margin <- t_value * se
+bonf_lower <- x_bar - bonf_margin
+bonf_upper <- x_bar + bonf_margin
+
+# 3. Região de confiança T²
+T2_crit <- (p * (n-1)/(n-p)) * qf(1-alpha, p, n-p)
+T2_crit
+
+# Print intervals
+cat("\nRoy's confidence intervals:\n")
+for(i in 1:3) {
+  cat(sprintf("mu%d: [%.2f, %.2f]\n", i, roy_lower[i], roy_upper[i]))
+}
+
+cat("\nBonferroni confidence intervals:\n")
+for(i in 1:3) {
+  cat(sprintf("mu%d: [%.2f, %.2f]\n", i, bonf_lower[i], bonf_upper[i]))
+}
+
+
+# 2.1
+# Данные
+x1 <- matrix(c(3, 2, 4, 7, 4, 7), ncol = 2, byrow = FALSE)
+x2 <- matrix(c(6, 5, 4, 9, 7, 8), ncol = 2, byrow = FALSE)
+
+mean_x1 <- colMeans(x1)
+mean_x2 <- colMeans(x2)
+Sp <- matrix(c(1, 1, 1, 2), nrow = 2)
+
+# 1. Вычисление линейной дискриминантной функции
+w <- solve(Sp) %*% (mean_x1 - mean_x2)
+w0 <- -0.5 * t(mean_x1) %*% solve(Sp) %*% mean_x1 +
+  0.5 * t(mean_x2) %*% solve(Sp) %*% mean_x2
+cat("Линейная дискриминантная функция: g(x) = t(w) %*% x + w0\n")
+print(w)
+print(w0)
+
+# 2. Классификация наблюдения x = [2, 7]'
+x <- matrix(c(2, 7), nrow = 2)
+g_x <- t(w) %*% x + w0
+cat("g(x):", g_x, "\n")
+if (g_x > 0) {
+  cat("Наблюдение относится к классу П1\n")
+} else {
+  cat("Наблюдение относится к классу П2\n")
+}
+
+#2.2
+# Данные
+P_Pi1 <- 0.8
+P_Pi2 <- 0.2
+
+C_Pi1_given_Pi2 <- 100
+C_Pi2_given_Pi1 <- 50
+
+f1_x <- 0.3
+f2_x <- 0.5
+
+# Ожидаемая стоимость для каждой из популяций
+cost_Pi1 <- C_Pi2_given_Pi1 * P_Pi1 * f1_x
+cost_Pi2 <- C_Pi1_given_Pi2 * P_Pi2 * f2_x
+cost_Pi1
+cost_Pi2
+
+# Выбор популяции с минимальной стоимостью
+if (cost_Pi1 < cost_Pi2) {
+  classification <- "Популяция Пи1"
+} else {
+  classification <- "Популяция Пи2"
+}
+
+classification
+
+#2.3
+# Определение функций плотности
+f1 <- function(x) ifelse(abs(x) <= 1, 0.5 * (1 - abs(x)), 0)
+f2 <- function(x) ifelse(abs(x - 0.5) <= 1, 0.5 * (1 - abs(x - 0.5)), 0)
+
+# Поиск точки, где f1(x) = f2(x)
+find_intersect <- uniroot(function(x) f1(x) - f2(x), c(-0.5, 1.5))$root
+
+# Разные вероятности и стоимости
+p1 <- 0.2
+p2 <- 1 - p1
+
+# Вычисление для каждого x в интервале
+x_vals <- seq(-0.5, 1.5, by = 0.01)
+decision_boundary <- sapply(x_vals, function(x) {
+  cost1 <- p1 * f1(x)
+  cost2 <- (1 - p1) * f2(x)
+  
+  if (cost1 < cost2) {
+    return("Pi1")
+  } else {
+    return("Pi2")
+  }
+})
+
+list(intersection = find_intersect, decision = decision_boundary)
+
+#2.4
+# Данные
+x1_bar <- c(-1, -1)
+x2_bar <- c(2, 1)
+s_p_inv <- matrix(c(0.14, 0.03, 0.03, 0.22), nrow=2)
+
+# Вектор разности средних
+diff_means <- x1_bar - x2_bar
+
+# Дискриминантная функция Фишера
+fisher_discriminant <- function(x) {
+  return(t(x) %*% s_p_inv %*% diff_means)
+}
+
+# Наблюдение
+x <- c(0, 1)
+
+# Вычисление дискриминантной функции
+d_x <- fisher_discriminant(x)
+d_x
+
+# Решение о классификации
+classification <- if (d_x > 0) "X1" else "X2"
+classification
+
+#0.1
+# Данные
+mu <- c(5, 6, 7, 8)
+Sigma <- matrix(c(2, 0, 1, 0, 
+                  0, 3, 2, 0, 
+                  1, 2, 4, 0, 
+                  0, 0, 0, 9), nrow = 4)
+
+# Вектор a
+a <- c(8, 8, 8, 8)
+
+# (a) Расчет E(X - a)
+E_X_minus_a <- mu - a
+E_X_minus_a
+
+# (b) Распределение [X2, X4]'
+mu_X2_X4 <- mu[c(2, 4)]
+Sigma_X2_X4 <- Sigma[c(2, 4), c(2, 4)]
+
+list(mean_X2_X4 = mu_X2_X4, cov_X2_X4 = Sigma_X2_X4)
+
+# (c) Среднее и дисперсия Z = X1 + 2X3 - X4 + 2
+coeff <- c(1, 0, 2, -1)
+
+# Среднее Z
+mean_Z <- sum(coeff * mu) + 2
+mean_Z
+
+# Дисперсия Z
+var_Z <- t(coeff) %*% Sigma %*% coeff
+var_Z
+
+#0.3
+# Данные
+x_bar <- c(2.38, 3.63)
+sc <- matrix(c(1.13, 1.02, 1.02, 1.41), nrow=2)
+sc_inv <- solve(sc)
+
+# Список расстояний
+d_squared <- c(1.7, 2.4, 2.0, 0.3, 3.2, 2.5, 1.7, 0.3)
+
+# Хи-квадрат значение при 75% вероятности с двумя степенями свободы
+chi_sq_val <- qchisq(0.75, df = 2)
+
+# Пропорция наблюдений в эллипсоиде
+prop_in_ellipse <- mean(d_squared <= chi_sq_val)
+prop_in_ellipse
+
+# Доверительный уровень
+alpha <- 0.01
+
+# Количество переменных
+p <- 2
+
+# Размер выборки
+n <- 8
+
+# Критические значения для метода Бонферрони
+t_val <- qt(1 - alpha/(2*p), df = n - 1)
+t_val
+
+#0.4
+# Средние
+x1_bar <- c(2, 1)
+x2_bar <- c(0, 2)
+
+# Обратная матрица ковариации
+sp_inv <- matrix(c(2, 1, 1, 5), nrow=2)
+
+# Дискриминантная функция Фишера
+fisher_discriminant <- function(x) {
+  return(t(x) %*% sp_inv %*% (x1_bar - x2_bar))
+}
+
+# Наблюдение
+x0 <- c(0, 1)
+
+# Вычисление дискриминантной функции
+d_x0 <- fisher_discriminant(x0)
+
+# Классификация
+if (d_x0 > 0) {
+  classification <- "X1"
+} else {
+  classification <- "X2"
+}
+
+classification
+
+#0.5
+# Вектор c
+c <- c(-1, 0, 1)
+
+# Среднее mu
+mu <- c(1, 2, 3)
+
+# Вычисление математического ожидания
+E <- 1 - sum(c * mu)
+E
+
+
+# Значение a
+a <- 3
+
+# Расчет E(Y)
+mu_Y <- c(mu[1] - mu[2], (mu[1] + mu[2] + mu[3]) / 3)
+mu_Y
+
+# Расчет ковариационной матрицы для Y
+Sigma <- matrix(c(1, 0, 0, 0, 3, 0, 0, 0, 1), nrow=3)
+
+# Var(Y_1) = Var(X_1) + Var(X_2) - 2 * Cov(X_1, X_2)
+var_Y1 <- Sigma[1,1] + Sigma[2,2] - 2 * Sigma[1,2]
+# Var(Y_2) = (Var(X_1) + Var(X_2) + Var(X_3)) / 9
+var_Y2 <- (Sigma[1,1] + Sigma[2,2] + Sigma[3,3]) / 9
+# Cov(Y_1, Y_2) = (Cov(X_1, X_1) + Cov(X_1, X_2) + Cov(X_1, X_3) - Cov(X_2, X_1) - Cov(X_2, X_2) - Cov(X_2, X_3))/3
+cov_Y1_Y2 <- (Sigma[1,1] + Sigma[1,2] + Sigma[1,3] - Sigma[2,1] - Sigma[2,2] - Sigma[2,3]) / 3
+
+Sigma_Y <- matrix(c(var_Y1, cov_Y1_Y2, cov_Y1_Y2, var_Y2), nrow=2)
+Sigma_Y
+
+# Ковариационная матрица для Z
+cov_Z1_Z2 <- function(a) {
+  return(Sigma[1, 2] + a * Sigma[1, 3] + a * Sigma[2, 3] + a^2 * Sigma[3, 3])
+}
+
+# Поиск a
+a_values <- seq(-10, 10, by = 0.01)
+a_selected <- a_values[which(abs(sapply(a_values, cov_Z1_Z2) - 2) < 0.001)]
+a_selected
+
+# Матрица среднего
+X_bar <- matrix(c(0, 0, 0), nrow = 3)
+
+#0.6
+# Данные
+x_bar <- c(4.6, 10.0)
+Sc <- matrix(c(2.9, -1.8, -1.8, 3.6), nrow = 2)
+
+# Вычисление матрицы корреляции
+diag_sqrt <- sqrt(diag(Sc))
+R <- Sc / (diag_sqrt %*% t(diag_sqrt))
+R
+
+library(MASS)
+
+# Данные
+n <- 20
+mu0 <- c(6, 9)
+alpha <- 0.05
+
+# T^2 тест
+T2 <- n * t(x_bar - mu0) %*% solve(Sc) %*% (x_bar - mu0)
+F_val <- ((n - 2) * T2) / (2 * (n - 1))
+crit_val <- qf(1 - alpha, 2, n - 2)
+
+p_value <- 1 - pf(F_val, 2, n - 2)
+p_value
+
+# Метод Роя
+t_val <- sqrt((qf(1 - alpha, 2, n - 2) * 2 * (n - 1)) / (n - 2))
+conf_int_roy <- cbind(
+  x_bar - t_val * sqrt(diag(Sc) / n),
+  x_bar + t_val * sqrt(diag(Sc) / n)
+)
+conf_int_roy
+
+# Интервалы по методу Бонферрони
+t_val_bonf <- qt(1 - alpha / 4, n - 1)
+conf_int_bonf <- cbind(
+  x_bar - t_val_bonf * sqrt(diag(Sc) / n),
+  x_bar + t_val_bonf * sqrt(diag(Sc) / n)
+)
+conf_int_bonf
+
+#0.7
+# Параметры
+a <- 2
+x1_bar <- c(1, 1, 0)
+x2_bar <- c(0, 2, 1)
+sp_inv <- matrix(c(0.5, 0, 0, 0, 1, -3, 0, -3, 10), nrow=3)
+
+# Дискриминантная функция Фишера
+fisher_discriminant <- function(x) {
+  return(t(x) %*% sp_inv %*% (x1_bar - x2_bar))
+}
+
+# Наблюдение
+x0 <- c(0, 1, 0)
+
+# Вычисление дискриминантной функции
+d_x0 <- fisher_discriminant(x0)
+
+# Классификация
+if (d_x0 > 0) {
+  classification <- "X1"
+} else {
+  classification <- "X2"
+}
+
+classification
+
+# Данные для Ex. 0.8
+mu <- c(1, 0, -1)
+Sigma <- matrix(c(11, -6, 2, -6, 10, -4, 2, -4, 6), nrow=3)
+
+# (a) Расчеты
+E_X1 <- mu[1]
+E_X2_squared <- Sigma[2, 2] + mu[2]^2
+E_X1_X2 <- Sigma[1, 2] + mu[1] * mu[2]
+
+list(E_X1 = E_X1, E_X2_squared = E_X2_squared, E_X1_X2 = E_X1_X2)
+
+# (b) Среднее и ковариационная матрица для Y
+mu_Y <- c(mu[1] + 2, sum(mu))
+Sigma_Y <- matrix(c(Sigma[1,1], sum(Sigma[1,]), sum(Sigma[,1])), nrow=2)
+Sigma_Y
+
+#0.10
+# Данные
+x1 <- c(3, 4, 1, 2, 3)
+x2 <- c(5, 5, 2, 3, 3)
+
+# Среднее
+x_bar <- c(mean(x1), mean(x2))
+x_bar
+
+# Матрица ковариаций и её обратная
+Sc <- matrix(c(1.3, 1.3, 1.3, 1.8), nrow=2)
+Sc_inv <- matrix(c(2.8, -2, -2, 2), nrow=2)
+
+# Хи-квадрат значение при 25% вероятности с двумя степенями свободы
+chi_sq_val <- qchisq(0.25, df = 2)
+
+# Вычисление расстояний
+distances_squared <- c(2.1, 1.5, 2.0, 0.3, 2.1)
+prop_in_ellipse <- mean(distances_squared <= chi_sq_val)
+prop_in_ellipse
+
+# Гипотеза
+mu0 <- c(2, 4)
+n <- length(x1)
+alpha <- 0.05
+
+# T^2 тест
+T2 <- n * t(x_bar - mu0) %*% Sc_inv %*% (x_bar - mu0)
+F_val <- ((n - 2) * T2) / (2 * (n - 1))
+crit_val <- qf(1 - alpha, 2, n - 2)
+
+p_value <- 1 - pf(F_val, 2, n - 2)
+p_value
+
+# Метод Роя
+f_val <- qf(1 - alpha, 2, n - 2)
+t_val <- sqrt(f_val * 2 * (n - 1) / (n - 2))
+conf_int_roy <- cbind(
+  x_bar - t_val * sqrt(diag(Sc) / n),
+  x_bar + t_val * sqrt(diag(Sc) / n)
+)
+conf_int_roy
+
+
+
